@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<title>Teamwork Judging — Kitty</title>
+<link rel="stylesheet" href="styles.css?v=1.7.16">
+</head>
+<body>
+<section id="judgeLogin" class="login-screen">
+  <div class="login-card">
+    <div class="brand"><div class="brand-icon">🤝</div><div><h1>Teamwork Judge</h1><p>HK GIC ENGAGEMENT HUB</p></div></div>
+    <p class="small">Dedicated scoring page for Kitty.</p>
+    <label class="label" for="judgePassword">Access password</label>
+    <input id="judgePassword" type="password" placeholder="Enter password">
+    <button id="judgeLoginButton" class="primary">Open Teamwork Scoring</button>
+    <div id="judgeLoginError" class="msg err"></div>
+  </div>
+</section>
+
+<main id="judgeApp" class="judge-app hidden">
+  <header class="judge-header">
+    <div class="brand"><div class="brand-icon">🤝</div><div><h1>Teamwork Scoring</h1><p>KITTY · 30 POINTS PER TEAM</p></div></div>
+    <div id="connectionBadge" class="connection">Connecting…</div>
+  </header>
+
+  <section class="judge-intro">
+    <b>Automatic saving is enabled.</b> Adjust a team’s score and it will be saved to Firebase immediately.
+    The MC results table updates automatically.
+  </section>
+
+  <div id="teamworkCards" class="judge-card-grid"></div>
+
+  <section class="autosave-footer">
+    <div>
+      <strong id="teamworkCompletion">0 teams scored</strong>
+      <p id="teamworkAutosaveStatus" class="small">Waiting for scores.</p>
+    </div>
+  </section>
+
+  <section class="control-card kitty-results-card">
+    <div class="section-heading-row">
+      <div>
+        <h2>Final Result Board</h2>
+        <p class="small">Same live overall result board as the MC page. Higher total scores appear first.</p>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="judge-results-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>Strength<br><span>/50</span></th>
+            <th>Teamwork<br><span>/30</span></th>
+            <th>Innovation Avg.<br><span>/20</span></th>
+            <th>Manager Votes</th>
+            <th>Total<br><span>/100</span></th>
+          </tr>
+        </thead>
+        <tbody id="kittyResultsBody">
+          <tr><td colspan="7" class="empty-score">Waiting for scores…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+<script type="module" src="teamwork-judge.js?v=1.6.4"></script>
+</body>
+</html>

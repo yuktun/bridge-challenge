@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PRIDE Bridge Builder Bonus Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        /* Custom scrollbars for leaderboard and lists */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between overflow-x-hidden overflow-y-auto select-none">
+
+    <header class="w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-4 flex justify-between items-center z-10">
+        <div class="flex items-center gap-2">
+            <div class="bg-gradient-to-tr from-amber-500 to-orange-600 p-2 rounded-lg shadow-lg shadow-orange-500/20">
+                <i class="fa-solid fa-bridge-water text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-sm tracking-wide bg-gradient-to-r from-white via-slate-200 to-orange-400 bg-clip-text text-transparent uppercase">GIC BRIDGE CHALLENGE</h1>
+                <p class="text-[10px] text-slate-400 font-medium">Secret Bonus Activity</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="soundToggleBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200" title="Toggle Sound">
+                <i class="fa-solid fa-volume-high text-sm"></i>
+            </button>
+            <button id="leaderboardBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200" title="Leaderboard">
+                <i class="fa-solid fa-trophy text-sm text-yellow-500"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="relative flex-1 w-full max-w-md mx-auto flex flex-col justify-start sm:justify-center items-center px-4 py-2">
+        <div class="relative w-full h-[calc(100dvh-9rem)] min-h-[560px] max-h-[760px] sm:aspect-[9/16] sm:h-auto sm:max-h-[75vh] bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+            
+            <canvas id="gameCanvas" class="absolute inset-0 w-full h-full block touch-none" style="touch-action:none;-webkit-user-select:none;user-select:none;"></canvas>
+
+            <div class="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
+                <div class="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 px-4 py-2 rounded-xl flex flex-col shadow-lg">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Score</span>
+                    <span id="scoreDisplay" class="text-3xl font-black text-amber-400">0</span>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                    <div class="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
+                        <span id="comboDisplay" class="text-xs font-bold text-slate-200">Combo: 0</span>
+                    </div>
+                    <div id="highScoreTag" class="text-[10px] text-slate-400 bg-slate-950/80 px-2 py-1 rounded border border-slate-800">
+                        Best: <span id="bestScoreVal" class="font-bold text-white">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="feedbackText" class="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-50 transition-all duration-300 pointer-events-none text-center z-10">
+                <span class="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent text-4xl font-black tracking-wider drop-shadow-[0_4px_8px_rgba(251,146,60,0.4)]">PERFECT!</span>
+            </div>
+
+            <div id="welcomeScreen" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col overflow-y-auto overscroll-contain p-5 text-center transition-all duration-300 z-20">
+                <div class="space-y-5 pb-4">
+                    <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-orange-500/20 animate-bounce">
+                        <i class="fa-solid fa-bridge text-4xl text-white"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h2 class="text-2xl font-black tracking-tight">PRIDE Bridge Builder</h2>
+                        <p class="text-xs text-slate-400 max-w-xs mx-auto">Build the perfect bridges, reach successive platforms, and secure your place on the live event leaderboard while you wait!</p>
+                    </div>
+
+
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 max-w-xs mx-auto text-left">
+                        <label for="teamSelect" class="block text-[10px] font-bold uppercase tracking-widest text-amber-400 mb-2">
+                            Select Your Team
+                        </label>
+                        <select id="teamSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-xs text-white focus:outline-none focus:border-orange-500">
+                            <option value="">Loading teams…</option>
+                        </select>
+                        <p id="teamSelectStatus" class="text-[9px] text-slate-500 mt-2">A team can unlock the extra resource only once.</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 text-left space-y-3 max-w-xs mx-auto">
+                        <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-info"></i> How to Play
+                        </h3>
+                        <ul class="text-xs text-slate-300 space-y-2">
+                            <li class="flex items-start gap-2">
+                                <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">1</span>
+                                <span><strong>Tap & hold</strong> anywhere to extend the bridge upwards.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">2</span>
+                                <span><strong>Release</strong> to let the bridge fall forward.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">3</span>
+                                <span>Land in the <strong>red center</strong> for a Perfect Combo bonus!</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sticky bottom-0 mt-auto pt-3 pb-1 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent space-y-3">
+                    <button id="startGameBtn" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold py-4 px-6 rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all duration-150 uppercase tracking-wider text-sm">
+                        Start Building
+                    </button>
+                    <p class="text-[10px] text-slate-500">Optimized for touch & mobile screens</p>
+                </div>
+            </div>
+
+            <div id="gameOverScreen" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col justify-between p-6 text-center transition-all duration-300 translate-y-full opacity-0 z-20">
+                <div class="my-auto space-y-5">
+                    <span class="text-xs font-bold uppercase tracking-widest text-rose-500 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">Game Over</span>
+                    
+                    <div class="space-y-1">
+                        <span class="text-xs text-slate-400 uppercase tracking-widest">Final Score</span>
+                        <h2 id="finalScoreDisplay" class="text-6xl font-black text-amber-400 animate-pulse">0</h2>
+                        <p id="newHighScoreAlert" class="text-xs text-emerald-400 font-bold hidden">🏆 New High Score! 🎉</p>
+                    </div>
+
+
+                    <div id="rewardMessage" class="hidden max-w-xs mx-auto rounded-xl border p-4 text-left">
+                        <h3 id="rewardTitle" class="text-sm font-extrabold"></h3>
+                        <p id="rewardText" class="text-xs mt-1 leading-relaxed"></p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 max-w-xs mx-auto space-y-3 shadow-inner">
+                        <p id="selectedTeamLabel" class="text-[10px] text-amber-400 font-bold"></p>
+                        <h3 class="text-xs font-bold text-slate-300 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-paper-plane text-amber-500"></i> Submit to Event Leaderboard
+                        </h3>
+                        <div class="flex gap-2">
+                            <input id="playerNameInput" type="text" placeholder="Your Name/Alias" class="bg-slate-950 border border-slate-700/50 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 flex-1 min-w-0" maxlength="15">
+                            <button id="submitScoreBtn" class="bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition duration-150 shrink-0">Submit</button>
+                        </div>
+                        <p id="submitStatus" class="text-[10px] text-slate-500"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="retryGameBtn" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-orange-500/15 transition-all active:scale-95 text-xs uppercase tracking-wider">
+                        Play Again <i class="fa-solid fa-rotate-right ml-1"></i>
+                    </button>
+                    <button id="openLeaderboardFromGameOver" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold py-3.5 px-4 rounded-xl transition-all active:scale-95 text-xs uppercase tracking-wider">
+                        Leaderboard <i class="fa-solid fa-trophy ml-1 text-amber-500"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="leaderboardOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col justify-between p-6 transition-all duration-300 translate-y-full opacity-0 z-30">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h3 class="text-base font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-amber-500"></i> Live Event Leaderboard
+                    </h3>
+                    <button id="closeLeaderboardBtn" class="text-slate-400 hover:text-white w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <div id="leaderboardList" class="flex-1 my-4 overflow-y-auto space-y-2 pr-1">
+                    </div>
+
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-center">
+                    <p class="text-[10px] text-slate-400">Scores are saved to the live Firebase leaderboard for this event.</p>
+                </div>
+            </div>
+
+            <div id="actionIndicator" class="absolute bottom-16 left-1/2 transform -translate-x-1/2 opacity-0 pointer-events-none transition-all duration-300">
+                <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">
+                    Stretching Bridge...
+                </span>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="w-full bg-slate-950/50 p-3 text-center z-10 border-t border-slate-900">
+        <p class="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">
+            HK GIC Engagement Event &bull; Built for Live Results Session
+        </p>
+    </footer>
+
+    <script>
+        /* Setup Tone.js synthesizers for fully generated audio */
+        let isMuted = false;
+        
+        // Synth for bridge growth and generic clicks
+        const synth = new Tone.MonoSynth({
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 0.4 }
+        }).toDestination();
+        synth.volume.value = -8;
+
+        // Synth for positive score chime & perfect hit
+        const polySynth = new Tone.PolySynth(Tone.Synth).toDestination();
+        polySynth.set({
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0.1 }
+        });
+        polySynth.volume.value = -10;
+
+        // Noise/Distortion Synth for game over crashes
+        const noiseSynth = new Tone.NoiseSynth({
+            noise: { type: "pink" },
+            envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.3 }
+        }).toDestination();
+        noiseSynth.volume.value = -12;
+
+        // Helper triggers
+        function playGrowSound(pitch) {
+            if (isMuted) return;
+            if (Tone.context.state !== 'running') return;
+            try {
+                // A sliding high pitch to simulate bridge stretch tension
+                synth.triggerAttackRelease(pitch, "0.05");
+            } catch (error) {
+                console.warn("Tone.js warning: grow sound failed safely.", error);
+            }
+        }
+
+        function playLandSound() {
+            if (isMuted) return;
+            if (Tone.context.state !== 'running') return;
+            try {
+                polySynth.triggerAttackRelease(["E5", "G#5"], "0.15");
+            } catch (error) {
+                console.warn("Tone.js warning: land sound failed safely.", error);
+            }
+        }
+
+        function playPerfectSound() {
+            if (isMuted) return;
+            if (Tone.context.state !== 'running') return;
+            try {
+                polySynth.triggerAttackRelease(["C6", "E6", "G6", "C7"], "0.3");
+            } catch (error) {
+                console.warn("Tone.js warning: perfect sound failed safely.", error);
+            }
+        }
+
+        function playFallSound() {
+            if (isMuted) return;
+            if (Tone.context.state !== 'running') return;
+            try {
+                // Play a slide down and noise explosion
+                synth.triggerAttackRelease("A2", "0.2");
+                setTimeout(() => {
+                    try {
+                        noiseSynth.triggerAttack();
+                    } catch (e) {}
+                }, 100);
+            } catch (error) {
+                console.warn("Tone.js warning: fall sound failed safely.", error);
+            }
+        }
+
+        // Sound Toggle Interaction
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        soundToggleBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            const icon = soundToggleBtn.querySelector('i');
+            if (isMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+                soundToggleBtn.classList.add('bg-slate-900/60');
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-amber-500 animate-pulse';
+                soundToggleBtn.classList.remove('bg-slate-900/60');
+                // Resume audio context to enable synthetic playbacks
+                Tone.start();
+            }
+        });
+    </script>
+
+    
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Dynamic High Score local storage
+        let highScore = parseInt(localStorage.getItem('pride_bridge_highscore') || '0', 10);
+        document.getElementById('bestScoreVal').textContent = highScore;
+
+        // Scaled Screen Configuration (HiDPI displays support)
+        let scale = window.devicePixelRatio || 1;
+        let width, height;
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * scale;
+            canvas.height = rect.height * scale;
+            ctx.scale(scale, scale);
+            width = rect.width;
+            height = rect.height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game Configuration and State System
+        const CONFIG = {
+            baseHeight: 0.65, // Platform sits at 65% height
+            playerSize: 14,
+            gravity: 1.2,
+            walkSpeed: 3.2,
+            fallSpeed: 6.0,
+            growSpeed: 3.5,
+            scrollSpeed: 5,
+            perfectMargin: 5 // Range of perfect middle landing on platform
+        };
+
+        // UI state management
+        const UI = {
+            score: document.getElementById('scoreDisplay'),
+            combo: document.getElementById('comboDisplay'),
+            feedback: document.getElementById('feedbackText'),
+            actionIndicator: document.getElementById('actionIndicator'),
+            welcome: document.getElementById('welcomeScreen'),
+            gameOver: document.getElementById('gameOverScreen')
+        };
+
+        let gameState = {
+            phase: 'waiting', // 'waiting' | 'stretching' | 'falling' | 'walking' | 'transitioning' | 'fallingPlayer' | 'dead'
+            score: 0,
+            combo: 0,
+            platforms: [],
+            player: { x: 0, y: 0, visualX: 0, visualY: 0, state: 'idle' },
+            bridge: { length: 0, angle: 0, x: 0, y: 0 },
+            scrollOffset: 0,
+            targetScroll: 0,
+            particles: [],
+            growPitch: 100, // Hz frequency for growth effect
+            lastGrowSoundTime: 0 // Safeguard to throttle synthesizer spam on mobile
+        };
+
+        function randomRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Particle System for success visuals
+        function spawnParticles(x, y, count = 12, color = '#fb923c') {
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: randomRange(-2.5, 2.5),
+                    vy: randomRange(-5, -1),
+                    radius: randomRange(2, 5),
+                    color: color,
+                    alpha: 1,
+                    life: randomRange(20, 45)
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const p = gameState.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // gravity
+                p.alpha -= 1 / p.life;
+                if (p.alpha <= 0) {
+                    gameState.particles.splice(i, 1);
+                }
+            }
+        }
+
+        // Initialize / Generate the dynamic set of platforms
+        function resetGame() {
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.phase = 'waiting';
+            gameState.particles = [];
+            gameState.lastGrowSoundTime = 0;
+
+            UI.score.textContent = '0';
+            UI.combo.textContent = 'Combo: 0';
+
+            // Fully close the Game Over screen before starting again.
+            UI.gameOver.classList.remove('translate-y-0', 'opacity-100');
+            UI.gameOver.classList.add('translate-y-full', 'opacity-0');
+
+            // Close the leaderboard too, in case it was opened after submitting.
+            const retryLeaderboardOverlay = document.getElementById('leaderboardOverlay');
+            retryLeaderboardOverlay.classList.remove('translate-y-0', 'opacity-100');
+            retryLeaderboardOverlay.classList.add('translate-y-full', 'opacity-0');
+
+            // Reset the score-submission form for the next attempt.
+            const retrySubmitButton = document.getElementById('submitScoreBtn');
+            const retryPlayerName = document.getElementById('playerNameInput');
+            const retrySubmitStatus = document.getElementById('submitStatus');
+            const retryRewardMessage = document.getElementById('rewardMessage');
+
+            retrySubmitButton.disabled = false;
+            retrySubmitButton.textContent = 'Submit';
+            retrySubmitButton.classList.remove('opacity-50', 'pointer-events-none');
+            retryPlayerName.value = '';
+            retrySubmitStatus.textContent = '';
+            retryRewardMessage.className = 'hidden max-w-xs mx-auto rounded-xl border p-4 text-left';
+
+            // Recalculate canvas size for iPhone orientation and dynamic browser bars.
+            resizeCanvas();
+
+            // Setup first platform at 1/10 width
+            const firstPlatformWidth = 60;
+            const startY = height * CONFIG.baseHeight;
+            
+            gameState.platforms = [
+                { x: 30, width: firstPlatformWidth },
+                { x: randomRange(140, width - 80), width: randomRange(25, 60) }
+            ];
+
+            // Position Explorer player model
+            gameState.player = {
+                x: 30 + firstPlatformWidth - 15,
+                y: startY,
+                visualX: 30 + firstPlatformWidth - 15,
+                visualY: startY,
+                frame: 0
+            };
+
+            // Setup bridge origin point
+            gameState.bridge = {
+                x: 30 + firstPlatformWidth,
+                y: startY,
+                length: 0,
+                angle: 0
+            };
+        }
+
+        function initControls() {
+            const gameCanvas = document.getElementById('gameCanvas');
+            let touchHolding = false;
+            let mouseHolding = false;
+
+            // iPhone/iPad: use native touch events without pointer capture.
+            // Safari can cancel pointer capture immediately, which made the bridge
+            // grow only a tiny amount and then become stuck.
+            gameCanvas.addEventListener('touchstart', (event) => {
+                if (event.touches.length !== 1) return;
+                if (event.cancelable) {
+                    event.preventDefault();
+                }
+                touchHolding = true;
+                handlePressStart();
+            }, { passive: false });
+
+            const finishTouch = (event) => {
+                if (!touchHolding) return;
+                if (event.cancelable) {
+                    event.preventDefault();
+                }
+                touchHolding = false;
+                handlePressEnd();
+            };
+
+            // Listen on document so releasing outside the canvas still drops the bridge.
+            document.addEventListener('touchend', finishTouch, { passive: false });
+            document.addEventListener('touchcancel', finishTouch, { passive: false });
+
+            // Laptop/desktop controls remain mouse based.
+            gameCanvas.addEventListener('mousedown', (event) => {
+                if (event.button !== 0) return;
+                event.preventDefault();
+                mouseHolding = true;
+                handlePressStart();
+            });
+
+            const finishMouse = () => {
+                if (!mouseHolding) return;
+                mouseHolding = false;
+                handlePressEnd();
+            };
+
+            document.addEventListener('mouseup', finishMouse);
+            window.addEventListener('blur', () => {
+                touchHolding = false;
+                mouseHolding = false;
+                handlePressEnd();
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    touchHolding = false;
+                    mouseHolding = false;
+                    handlePressEnd();
+                }
+            });
+        }
+
+        function handlePressStart() {
+            // Start audio without blocking the game if iOS refuses audio initialization.
+            if (window.Tone?.start) {
+                Promise.resolve(Tone.start()).catch(() => {});
+            }
+
+            if (gameState.phase === 'waiting' && UI.welcome.classList.contains('hidden')) {
+                gameState.phase = 'stretching';
+                gameState.bridge.length = 0;
+                gameState.bridge.angle = 0;
+                gameState.growPitch = 120; // reset synth sound seed
+                UI.actionIndicator.classList.remove('opacity-0');
+            }
+        }
+
+        function handlePressEnd() {
+            if (gameState.phase === 'stretching') {
+                gameState.phase = 'falling';
+                UI.actionIndicator.classList.add('opacity-0');
+            }
+        }
+
+        // Trigger welcome dismissal & starts game flow
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            const teamSelect = document.getElementById('teamSelect');
+            if (!teamSelect.value) {
+                const status = document.getElementById('teamSelectStatus');
+                status.textContent = 'Please select your team before starting.';
+                status.className = 'text-[9px] text-rose-400 mt-2';
+                return;
+            }
+            document.getElementById('selectedTeamLabel').textContent = `Team: ${teamSelect.options[teamSelect.selectedIndex].text}`;
+            UI.welcome.classList.add('hidden');
+            resetGame();
+        });
+
+        document.getElementById('retryGameBtn').addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            resetGame();
+        });
+
+        function updatePhysics() {
+            const currentPlatform = gameState.platforms[0];
+            const targetPlatform = gameState.platforms[1];
+
+            // Update particle visuals
+            updateParticles();
+
+            // Phase 1: Stretching bridge logic
+            if (gameState.phase === 'stretching') {
+                gameState.bridge.length += CONFIG.growSpeed;
+                
+                // Synth sound escalation pitch while bridge expands
+                gameState.growPitch += 10;
+                if (gameState.growPitch < 800) {
+                    const now = performance.now();
+                    // iOS Throttle: Limit synthesis requests to once every 80ms to avoid overloading Safaris WebAudio
+                    if (!gameState.lastGrowSoundTime || (now - gameState.lastGrowSoundTime > 80)) {
+                        playGrowSound(gameState.growPitch);
+                        gameState.lastGrowSoundTime = now;
+                    }
+                }
+
+                // Auto fail if bridge exceeds max reasonable viewport size
+                if (gameState.bridge.length > height * 0.7) {
+                    gameState.bridge.length = height * 0.7;
+                    gameState.phase = 'falling';
+                    UI.actionIndicator.classList.add('opacity-0');
+                }
+            }
+
+            // Phase 2: Simulating bridge falling flat forward
+            if (gameState.phase === 'falling') {
+                gameState.bridge.angle += 0.08;
+                if (gameState.bridge.angle >= Math.PI / 2) {
+                    gameState.bridge.angle = Math.PI / 2;
+                    checkBridgeLanded();
+                }
+            }
+
+            // Phase 3: Walking character forward across the bridge
+            if (gameState.phase === 'walking') {
+                const targetWalkX = gameState.bridge.x + gameState.bridge.length;
+                
+                if (gameState.player.visualX < targetWalkX) {
+                    gameState.player.visualX += CONFIG.walkSpeed;
+                    // Mini jump animation frame while walking
+                    gameState.player.visualY = gameState.player.y - Math.abs(Math.sin(gameState.player.visualX * 0.1) * 3);
+                } else {
+                    gameState.player.visualX = targetWalkX;
+                    gameState.player.visualY = gameState.player.y;
+                    
+                    // Verify if player successfully walked to next platform or plummeted
+                    if (gameState.successfulLanding) {
+                        handleSuccess();
+                    } else {
+                        gameState.phase = 'fallingPlayer';
+                    }
+                }
+            }
+
+            // Phase 4: Handle character drop fall (failure)
+            if (gameState.phase === 'fallingPlayer') {
+                gameState.player.visualY += CONFIG.fallSpeed;
+                // Slowly tilt character into vertical dive
+                gameState.bridge.angle += 0.06;
+                
+                if (gameState.player.visualY > height + 50) {
+                    handleGameOver();
+                }
+            }
+
+            // Phase 5: Smooth canvas scrolling view transition
+            if (gameState.phase === 'transitioning') {
+                const step = (gameState.targetScroll - gameState.scrollOffset) * 0.15;
+                if (Math.abs(step) > 0.1) {
+                    gameState.scrollOffset += step;
+                } else {
+                    gameState.scrollOffset = gameState.targetScroll;
+                    
+                    // Complete transition: Purge old platform, generate next target
+                    gameState.platforms.shift();
+                    
+                    // Shift references back
+                    const currentPlat = gameState.platforms[0];
+                    currentPlat.x -= gameState.scrollOffset;
+                    
+                    // Generate new landing spot dynamically
+                    const minX = currentPlat.x + currentPlat.width + 40;
+                    const maxX = width - 70;
+                    const newPlatX = randomRange(minX, Math.max(minX + 20, maxX));
+                    const newPlatWidth = randomRange(25, 60);
+                    
+                    gameState.platforms.push({
+                        x: newPlatX,
+                        width: newPlatWidth
+                    });
+
+                    // Recalibrate system references
+                    gameState.player.visualX = currentPlat.x + currentPlat.width - 15;
+                    gameState.player.x = gameState.player.visualX;
+                    gameState.scrollOffset = 0;
+                    gameState.targetScroll = 0;
+
+                    // Re-origin bridge point
+                    gameState.bridge.x = currentPlat.x + currentPlat.width;
+                    gameState.bridge.length = 0;
+                    gameState.bridge.angle = 0;
+
+                    gameState.phase = 'waiting';
+                }
+            }
+        }
+
+        function checkBridgeLanded() {
+            const currentPlatform = gameState.platforms[0];
+            const targetPlatform = gameState.platforms[1];
+            
+            const bridgeTipX = gameState.bridge.x + gameState.bridge.length;
+            const targetLeft = targetPlatform.x;
+            const targetRight = targetPlatform.x + targetPlatform.width;
+
+            // Define exact middle area for perfect score target
+            const centerOfTarget = targetPlatform.x + (targetPlatform.width / 2);
+            const isPerfect = Math.abs(bridgeTipX - centerOfTarget) <= CONFIG.perfectMargin;
+
+            if (bridgeTipX >= targetLeft && bridgeTipX <= targetRight) {
+                // Success landing
+                gameState.successfulLanding = true;
+                gameState.isPerfect = isPerfect;
+                gameState.phase = 'walking';
+                playLandSound();
+            } else {
+                // Bridge too short or too long
+                gameState.successfulLanding = false;
+                gameState.phase = 'walking';
+                playFallSound();
+            }
+        }
+
+        function handleSuccess() {
+            // Update Combo multiplier
+            if (gameState.isPerfect) {
+                gameState.combo += 1;
+                gameState.score += (1 + gameState.combo);
+                triggerFeedbackText();
+                playPerfectSound();
+                // Visual spark particles
+                spawnParticles(gameState.bridge.x + gameState.bridge.length, height * CONFIG.baseHeight, 15, '#facc15');
+            } else {
+                gameState.combo = 0;
+                gameState.score += 1;
+                // Small landing sparkles
+                spawnParticles(gameState.bridge.x + gameState.bridge.length, height * CONFIG.baseHeight, 6, '#e2e8f0');
+            }
+
+            // Sync visual HUDs
+            UI.score.textContent = gameState.score;
+            UI.combo.textContent = `Combo: ${gameState.combo}`;
+
+            // Trigger canvas scrolling transition to next setup
+            const targetPlatform = gameState.platforms[1];
+            gameState.targetScroll = targetPlatform.x - 30; // dynamic margin buffer
+            gameState.phase = 'transitioning';
+        }
+
+        function triggerFeedbackText() {
+            UI.feedback.classList.remove('opacity-0', 'scale-50');
+            UI.feedback.classList.add('opacity-100', 'scale-100');
+            
+            setTimeout(() => {
+                UI.feedback.classList.remove('opacity-100', 'scale-100');
+                UI.feedback.classList.add('opacity-0', 'scale-50');
+            }, 1000);
+        }
+
+        function handleGameOver() {
+            gameState.phase = 'dead';
+            
+            // Check best high score updates
+            let currentBest = false;
+            if (gameState.score > highScore) {
+                highScore = gameState.score;
+                localStorage.setItem('pride_bridge_highscore', highScore);
+                document.getElementById('bestScoreVal').textContent = highScore;
+                currentBest = true;
+            }
+
+            // Update modal metrics display
+            document.getElementById('finalScoreDisplay').textContent = gameState.score;
+            const rawNewHighScoreAlert = document.getElementById('newHighScoreAlert');
+            if (currentBest) {
+                rawNewHighScoreAlert.classList.remove('hidden');
+            } else {
+                rawNewHighScoreAlert.classList.add('hidden');
+            }
+
+            // Render/slide up the Game Over Menu overlay
+            UI.gameOver.classList.remove('translate-y-full', 'opacity-0');
+            UI.gameOver.classList.add('translate-y-0', 'opacity-100');
+        }
+    </script>
+
+    <script>
+        function drawScene() {
+            // Clean canvas view
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Draw Stylized Gradient Background Layer (Sky)
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#0f172a'); // slate-900
+            skyGradient.addColorStop(0.6, '#1e1b4b'); // indigo-950
+            skyGradient.addColorStop(1, '#020617'); // slate-950
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // 2. Draw Decorative Parallax Cyber/Tech City silhouettes in background
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+            ctx.fillRect(40, height * 0.4, 60, height * 0.25);
+            ctx.fillRect(180, height * 0.35, 80, height * 0.3);
+            ctx.fillRect(280, height * 0.45, 50, height * 0.2);
+
+            // 3. Draw active Platforms (applying scroll view offsets)
+            gameState.platforms.forEach((platform, index) => {
+                const adjustedX = platform.x - gameState.scrollOffset;
+                const platformY = height * CONFIG.baseHeight;
+                const platformHeight = height - platformY;
+
+                // Draw main platform pillar body
+                const platGrad = ctx.createLinearGradient(adjustedX, platformY, adjustedX + platform.width, platformY + platformHeight);
+                platGrad.addColorStop(0, '#1e293b'); // slate-800
+                platGrad.addColorStop(1, '#0f172a'); // slate-900
+                ctx.fillStyle = platGrad;
+                ctx.fillRect(adjustedX, platformY, platform.width, platformHeight);
+
+                // Highlight platform top neon orange lip
+                ctx.fillStyle = '#f97316'; // orange-500
+                ctx.fillRect(adjustedX, platformY, platform.width, 4);
+
+                // Draw central "Perfect" target dot in red (except for starting tutorial platform)
+                if (index === 1) {
+                    const centerPoint = adjustedX + (platform.width / 2);
+                    ctx.fillStyle = '#ef4444'; // red-500 red target center
+                    ctx.beginPath();
+                    ctx.arc(centerPoint, platformY + 2, CONFIG.perfectMargin, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Tiny perfect neon guide glow
+                    ctx.fillStyle = '#fef08a'; // yellow-200
+                    ctx.beginPath();
+                    ctx.arc(centerPoint, platformY + 2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            // 4. Draw Bridge
+            const b = gameState.bridge;
+            const adjustedBridgeX = b.x - gameState.scrollOffset;
+            ctx.save();
+            ctx.translate(adjustedBridgeX, b.y);
+            ctx.rotate(b.angle);
+
+            // Stylized thick orange structural bridge line with sleek neon dots
+            ctx.strokeStyle = '#f59e0b'; // amber-500
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -b.length);
+            ctx.stroke();
+
+            // Structural bridge geometric crosslines (gives detailed truss asset aesthetics)
+            ctx.strokeStyle = 'rgba(251, 146, 60, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 20; i < b.length; i += 20) {
+                ctx.moveTo(-2, -i);
+                ctx.lineTo(2, -i);
+                ctx.moveTo(0, -i);
+                ctx.lineTo(2, -i + 10);
+            }
+            ctx.stroke();
+
+            ctx.restore();
+
+            // 5. Draw Exploding Particles
+            gameState.particles.forEach((p) => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x - gameState.scrollOffset, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 6. Draw Player explorer model
+            const playerVisualX = gameState.player.visualX - gameState.scrollOffset;
+            const pSize = CONFIG.playerSize;
+
+            ctx.save();
+            ctx.translate(playerVisualX, gameState.player.visualY);
+
+            // Sleek Glowing Aura/Shadow underneath player explorer
+            const shadowGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, pSize);
+            shadowGrad.addColorStop(0, 'rgba(251, 146, 60, 0.4)');
+            shadowGrad.addColorStop(1, 'rgba(251, 146, 60, 0)');
+            ctx.fillStyle = shadowGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, pSize * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Explorer backpack/jetpack (orange block back)
+            ctx.fillStyle = '#ea580c'; // orange-600
+            ctx.fillRect(-pSize - 3, -pSize - 2, 4, pSize);
+
+            // Explorer Main Body (Sphere helmet look)
+            const bodyGrad = ctx.createLinearGradient(-pSize, -pSize, pSize, pSize);
+            bodyGrad.addColorStop(0, '#fb923c'); // orange-400
+            bodyGrad.addColorStop(1, '#ea580c'); // orange-600
+            ctx.fillStyle = bodyGrad;
+            ctx.beginPath();
+            ctx.arc(0, -pSize, pSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Helmet Shiny Visor Glass (Metallic Tech Look)
+            ctx.fillStyle = '#0f172a'; // dark visor
+            ctx.beginPath();
+            ctx.ellipse(pSize / 3, -pSize - 1, pSize / 1.5, pSize / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Shiny visor reflective dot
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(pSize / 2, -pSize - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Small dynamic walking boots
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-pSize / 2 - 2, -2, 4, 3);
+            ctx.fillRect(pSize / 2 - 2, -2, 4, 3);
+
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            updatePhysics();
+            drawScene();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Window load and bootstrap initiation
+        window.addEventListener('load', () => {
+            initControls();
+            gameLoop();
+        })
+    </script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import {
+  getDatabase, ref, onValue, push, set, runTransaction, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+import {
+  firebaseConfig, BRIDGE_PATH, DEFAULT_TEAM_COUNT, makeTeamNames
+} from "./config.js";
+
+const firebaseApp = initializeApp(firebaseConfig);
+const firebaseAuth = getAuth(firebaseApp);
+const firebaseDb = getDatabase(firebaseApp);
+const teamSelect = document.getElementById("teamSelect");
+const leaderboardList = document.getElementById("leaderboardList");
+const submitScoreBtn = document.getElementById("submitScoreBtn");
+const submitStatus = document.getElementById("submitStatus");
+const playerNameInput = document.getElementById("playerNameInput");
+const rewardMessage = document.getElementById("rewardMessage");
+const rewardTitle = document.getElementById("rewardTitle");
+const rewardText = document.getElementById("rewardText");
+
+let currentLeaderboard = {};
+let currentRewards = {};
+let currentTeamNames = makeTeamNames(DEFAULT_TEAM_COUNT);
+
+const leaderboardOverlay = document.getElementById("leaderboardOverlay");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const openLeaderboardButton = document.getElementById("leaderboardBtn") || document.getElementById("openLeaderboardBtn");
+const openLeaderboardFromGameOver = document.getElementById("openLeaderboardFromGameOver");
+const closeLeaderboardButton = document.getElementById("closeLeaderboardBtn");
+
+function openLeaderboard() {
+  renderLeaderboard();
+  leaderboardOverlay.classList.remove("translate-y-full", "opacity-0");
+  leaderboardOverlay.classList.add("translate-y-0", "opacity-100");
+}
+
+function closeLeaderboard() {
+  leaderboardOverlay.classList.remove("translate-y-0", "opacity-100");
+  leaderboardOverlay.classList.add("translate-y-full", "opacity-0");
+}
+
+window.showLeaderboard = openLeaderboard;
+
+openLeaderboardButton?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  openLeaderboard();
+});
+
+openLeaderboardFromGameOver?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  openLeaderboard();
+});
+
+closeLeaderboardButton?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  closeLeaderboard();
+});
+
+function teamKeyFromIndex(index) {
+  return `team${Number(index) + 1}`;
+}
+
+function renderTeams(count) {
+  currentTeamNames = makeTeamNames(count);
+  const previous = teamSelect.value;
+  teamSelect.innerHTML = '<option value="">— Select your team —</option>' +
+    currentTeamNames.map((name, index) => `<option value="${index}">${name}</option>`).join("");
+  if (previous !== "" && Number(previous) < currentTeamNames.length) teamSelect.value = previous;
+}
+
+function renderLeaderboard() {
+  const entries = Object.values(currentLeaderboard || {})
+    .filter(item => item && Number.isFinite(Number(item.score)))
+    .sort((a, b) => Number(b.score) - Number(a.score) || Number(a.submittedAt || 0) - Number(b.submittedAt || 0));
+
+  leaderboardList.innerHTML = "";
+  if (!entries.length) {
+    leaderboardList.innerHTML = '<div class="text-center text-xs text-slate-500 p-6">No scores yet. Be the first!</div>';
+    return;
+  }
+
+  entries.slice(0, 50).forEach((player, index) => {
+    const rankBadge = index === 0 ? "🏆" : index === 1 ? "🥈" : index === 2 ? "🥉" : `<span class="text-xs text-slate-500">${index + 1}</span>`;
+    const row = document.createElement("div");
+    row.className = `flex justify-between items-center p-3 rounded-xl border ${index === 0 ? "bg-amber-500/10 border-amber-500/30" : "bg-slate-900/60 border-slate-800"}`;
+    row.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 flex items-center justify-center font-bold">${rankBadge}</div>
+        <div>
+          <span class="text-xs font-bold ${index === 0 ? "text-amber-400" : "text-slate-200"}">${player.playerName || "Anonymous"}</span>
+          <span class="block text-[8px] text-slate-500">${player.teamName || ""}</span>
+        </div>
+      </div>
+      <div class="bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
+        <span class="text-sm font-extrabold text-amber-400">${Number(player.score)}</span>
+      </div>`;
+    leaderboardList.appendChild(row);
+  });
+}
+
+window.updateLeaderboardView = renderLeaderboard;
+
+onValue(ref(firebaseDb, `${BRIDGE_PATH}/settings/teamCount`), snapshot => {
+  renderTeams(snapshot.val() || DEFAULT_TEAM_COUNT);
+});
+
+onValue(ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/leaderboard`), snapshot => {
+  currentLeaderboard = snapshot.val() || {};
+  renderLeaderboard();
+});
+
+onValue(ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/teamRewards`), snapshot => {
+  currentRewards = snapshot.val() || {};
+});
+
+submitScoreBtn.addEventListener("click", async event => {
+  event.preventDefault();
+
+  const playerName = playerNameInput.value.trim();
+  const teamIndex = Number(teamSelect.value);
+  const score = Number(document.getElementById("finalScoreDisplay").textContent || 0);
+
+  if (!playerName) {
+    submitStatus.textContent = "Please enter your name or alias.";
+    submitStatus.className = "text-[10px] text-rose-400";
+    return;
+  }
+
+  if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex >= currentTeamNames.length) {
+    submitStatus.textContent = "Please return and select a valid team.";
+    submitStatus.className = "text-[10px] text-rose-400";
+    return;
+  }
+
+  const teamKey = teamKeyFromIndex(teamIndex);
+  const teamName = currentTeamNames[teamIndex];
+
+  submitScoreBtn.disabled = true;
+  submitScoreBtn.textContent = "Saving…";
+
+  try {
+    const entryRef = push(ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/leaderboard`));
+    await set(entryRef, {
+      playerName,
+      teamKey,
+      teamName,
+      score,
+      submittedAt: serverTimestamp()
+    });
+
+    let firstTeamUnlock = false;
+    if (score >= 10) {
+      const rewardRef = ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/teamRewards/${teamKey}`);
+      const result = await runTransaction(rewardRef, current => {
+        if (current) return;
+        firstTeamUnlock = true;
+        return {
+          teamName,
+          firstPlayerName: playerName,
+          qualifyingScore: score,
+          qualifiedAt: Date.now()
+        };
+      });
+
+      if (result.committed && firstTeamUnlock) {
+        rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-emerald-500/40 bg-emerald-950/50 p-4 text-left";
+        rewardTitle.textContent = "🎉 Extra Resource Unlocked!";
+        rewardTitle.className = "text-sm font-extrabold text-emerald-300";
+        rewardText.textContent = `${teamName} is the first from your team to score 10 or above. Show this screen and check with Nixon to receive one extra resource for your team.`;
+      } else {
+        rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-left";
+        rewardTitle.textContent = "⭐ Great score!";
+        rewardTitle.className = "text-sm font-extrabold text-amber-300";
+        rewardText.textContent = `${teamName} has already unlocked its one-time extra resource.`;
+      }
+    } else {
+      rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-slate-700 bg-slate-900 p-4 text-left";
+      rewardTitle.textContent = "Keep building!";
+      rewardTitle.className = "text-sm font-extrabold text-slate-200";
+      rewardText.textContent = "Score 10 or above to help your team unlock one extra resource.";
+    }
+
+    submitStatus.textContent = "Score saved to the live leaderboard.";
+    submitStatus.className = "text-[10px] text-emerald-400";
+    submitScoreBtn.textContent = "Saved ✓";
+    setTimeout(openLeaderboard, 500);
+  } catch (error) {
+    console.error(error);
+    submitStatus.textContent = error?.message || "Could not save the score.";
+    submitStatus.className = "text-[10px] text-rose-400";
+    submitScoreBtn.disabled = false;
+    submitScoreBtn.textContent = "Submit";
+  }
+});
+
+signInAnonymously(firebaseAuth).catch(error => {
+  document.getElementById("teamSelectStatus").textContent = error?.message || "Firebase sign-in failed.";
+  document.getElementById("teamSelectStatus").className = "text-[9px] text-rose-400 mt-2";
+});
+</script>
+
+</body>
+</html>

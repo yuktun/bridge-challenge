@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<title>PRIDE Bridge Challenge</title>
+<link rel="stylesheet" href="styles.css?v=1.7.18">
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="brand"><div class="brand-icon">🌉</div><div><h1>PRIDE Bridge Challenge</h1><p>HK GIC ENGAGEMENT HUB</p></div></div>
+  <div id="connectionBadge" class="connection">Connecting…</div>
+</header>
+
+<main>
+<div id="announcement" class="announcement hidden"></div>
+
+<section class="tab active" id="intel">
+  <div class="hero">
+    <span class="pill">🎯 CORE VALUE CHALLENGE</span>
+    <h2>Welcome to the Challenge!</h2>
+    <p>Build a high-strength paper bridge under strict time pressure and limited materials. Bring <b style="color:#a5b4fc">PRIDE</b> to life through teamwork, creativity and execution.</p>
+    <div class="prize">🏆 <b style="color:#fbbf24">Prizes:</b> Ultimate Champion, Most Innovative Design and Best Team Spirit.</div>
+  </div>
+
+  <div class="section-title">📐 Interactive Mission Setup</div>
+  <div class="card">
+    <div class="blueprint">
+      <svg viewBox="0 0 400 200">
+        <defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0L0 0 0 20" fill="none" stroke="rgba(51,65,85,.25)"/></pattern></defs>
+        <rect width="400" height="200" fill="url(#grid)"/>
+        <line x1="10" y1="160" x2="390" y2="160" stroke="#475569" stroke-dasharray="4"/>
+        <g class="hot" data-part="pier" tabindex="0">
+          <rect x="50" y="100" width="45" height="60" rx="3" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+          <ellipse cx="72.5" cy="100" rx="22.5" ry="6" fill="#475569"/><text x="72.5" y="135" fill="#94a3b8" font-size="9" text-anchor="middle">CAN 1</text>
+          <rect x="305" y="100" width="45" height="60" rx="3" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+          <ellipse cx="327.5" cy="100" rx="22.5" ry="6" fill="#475569"/><text x="327.5" y="135" fill="#94a3b8" font-size="9" text-anchor="middle">CAN 2</text>
+        </g>
+        <g class="hot" data-part="gap" tabindex="0">
+          <line x1="95" y1="140" x2="305" y2="140" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 2"/>
+          <rect x="160" y="128" width="80" height="20" rx="4" fill="#0f172a" stroke="#f59e0b"/>
+          <text x="200" y="141" fill="#f59e0b" font-size="8" font-weight="bold" text-anchor="middle">GAP ≥ 30 cm</text>
+        </g>
+        <g class="hot" data-part="deck" id="missionBridgeDeck" tabindex="0">
+          <path d="M45 95L80 82L120 95L160 82L200 95L240 82L280 95L320 82L355 95" fill="none" stroke="#a78bfa" stroke-width="4"/>
+          <text x="200" y="70" fill="#c084fc" font-size="9" font-weight="bold" text-anchor="middle">PAPER BRIDGE</text>
+        </g>
+        <g class="hot" data-part="weight" id="missionLoadBlock" tabindex="0">
+          <rect x="180" y="55" width="40" height="20" rx="2" fill="#ef4444"/><text x="200" y="68" fill="#fff" font-size="8" font-weight="bold" text-anchor="middle">LOAD</text>
+        </g>
+      </svg>
+      <div class="info" id="diagramInfo">✨ Move over or tap a bridge component to inspect the rules.</div>
+    </div>
+  </div>
+
+  <div class="section-title">Quick Overview</div>
+  <div class="grid2">
+    <div class="mini"><div>📦</div><h3>KITS PROVIDED</h3><ul><li>15 A4 sheets</li><li>60 cm masking tape</li><li>2 coffee cans</li><li>No other supports</li></ul></div>
+    <div class="mini"><div>⏲️</div><h3>TIME SCHEDULE</h3><ul><li>5m planning</li><li>15m construction</li><li>5m judging</li></ul></div>
+  </div>
+
+  <div class="section-title">⚖️ Official Scoring</div>
+  <div class="card">
+    <button class="score-item score-expand-button" id="strengthScoreButton" aria-expanded="false">
+      <div class="score-head"><span>💪 Strength</span><span style="color:#fbbf24">50 pts</span></div>
+      <div class="bar"><i style="width:50%;background:#f59e0b"></i></div>
+      <p>Weight held before collapse or contact with the table.</p>
+      <span class="tap-note">Tap to see the five load-test stages</span>
+    </button>
+
+    <div id="strengthRules" class="strength-rules hidden">
+      <div class="strength-rule-row" data-strength-stage="1"><span>1</span><div class="strength-rule-copy"><b>Bridge completed + 1 A4 paper</b><small>Pass this stage to earn 10 points.</small></div><div class="strength-stage-live" id="strengthStageTeams1" aria-label="Teams currently at stage 1"></div><strong>+10</strong></div>
+      <div class="strength-rule-row" data-strength-stage="2"><span>2</span><div class="strength-rule-copy"><b>Add 10 identical coins</b><small>Pass this stage to earn another 5 points.</small></div><div class="strength-stage-live" id="strengthStageTeams2" aria-label="Teams currently at stage 2"></div><strong>+5</strong></div>
+      <div class="strength-rule-row" data-strength-stage="3"><span>3</span><div class="strength-rule-copy"><b>Place 1 coffee can on top</b><small>Pass this stage to earn another 10 points.</small></div><div class="strength-stage-live" id="strengthStageTeams3" aria-label="Teams currently at stage 3"></div><strong>+10</strong></div>
+      <div class="strength-rule-row" data-strength-stage="4"><span>4</span><div class="strength-rule-copy"><b>Increase to 2 coffee cans in total</b><small>Pass this stage to earn another 10 points.</small></div><div class="strength-stage-live" id="strengthStageTeams4" aria-label="Teams currently at stage 4"></div><strong>+10</strong></div>
+      <div class="strength-rule-row" data-strength-stage="5"><span>5</span><div class="strength-rule-copy"><b>Place a 2.5 kg object on top</b><small>Pass this final stage to earn another 15 points.</small></div><div class="strength-stage-live" id="strengthStageTeams5" aria-label="Teams currently at stage 5"></div><strong>+15</strong></div>
+      <p class="strength-note">A team keeps all points earned from earlier successful stages, even if it fails a later stage.</p>
+    </div>
+
+    <div class="score-item"><div class="score-head"><span>🤝 Teamwork</span><span style="color:#38bdf8">30 pts</span></div><div class="bar"><i style="width:30%;background:#38bdf8"></i></div><p>Communication, participation and task sharing. Judged by Kitty.</p></div>
+    <div class="score-item intel-innovation-secret" id="intelInnovationSecret" tabindex="0" role="button" aria-label="Innovation scoring"><div class="score-head"><span>💡 Innovation</span><span style="color:#34d399">20 pts</span></div><div class="bar"><i style="width:20%;background:#34d399"></i></div><p>Creativity and effective use of the provided materials. Judged by all managers.</p></div>
+  </div>
+</section>
+
+<section class="tab" id="timer">
+  <div class="timerbox waiting" id="timerBox">
+    <span class="phasebadge" id="phaseBadge">WAITING FOR MC</span>
+    <h2 id="phaseName">Strategy & Planning</h2>
+    <p id="phaseDesc">The MC controls this timer centrally.</p>
+    <div class="time" id="timeDisplay">05:00</div>
+    <span class="statusline" id="timerStatus">Waiting</span>
+  </div>
+  <div class="notice">🔔 This timer is centrally controlled by the MC. Keep this page open to receive live phase and announcement updates.</div>
+</section>
+
+<section class="tab" id="design">
+  <div class="hero">
+    <span class="pill">📚 DESIGN LAB</span>
+    <h2>Unlock Three Design Hints</h2>
+    <p>Answer one multiple-choice question correctly to reveal each optional structural idea.</p>
+  </div>
+
+  <div class="design-warning">
+    <b>Suggestions only:</b> These examples are optional ideas, not required solutions or guaranteed winning designs.
+    Original thinking is encouraged and remains part of the Innovation score.
+  </div>
+
+  <div class="hint-card" data-hint="pride">
+    <div class="hint-head">
+      <div>
+        <span class="hint-number">HINT 1</span>
+        <h3>Unlock the first structural idea</h3>
+      </div>
+      <span class="lock-status" id="status-pride">🔒 Locked</span>
+    </div>
+
+    <div class="question-block" id="question-pride">
+      <p class="question-text">What does PRIDE stand for?</p>
+      <div class="hint-options">
+        <button data-question="pride" data-answer="a">Purpose-driven, Relationship-led, Innovative, Decisive, and Everything Fun</button>
+        <button data-question="pride" data-answer="b">Performance-focused, Results-led, Inclusive, Disciplined, and Excellence First</button>
+        <button data-question="pride" data-answer="c">People-centred, Responsible, Inspiring, Dynamic, and Efficient</button>
+      </div>
+      <p class="answer-feedback" id="feedback-pride"></p>
+    </div>
+
+    <div class="unlocked-hint hidden" id="hint-pride">
+      <div class="design-visual">
+        <svg viewBox="0 0 220 70">
+          <polyline points="15,55 35,15 55,55 75,15 95,55 115,15 135,55 155,15 175,55 195,15 210,55" fill="none" stroke="#38bdf8" stroke-width="4"/>
+          <line x1="12" y1="10" x2="210" y2="10" stroke="#7dd3fc" stroke-width="2"/>
+          <line x1="12" y1="60" x2="210" y2="60" stroke="#7dd3fc" stroke-width="2"/>
+        </svg>
+      </div>
+      <span class="option-tag blue">Option A</span>
+      <h3>Pleated / Accordion Fold</h3>
+      <p>Repeated folds can help paper resist bending and spread force across the bridge.</p>
+    </div>
+  </div>
+
+  <div class="hint-card" data-hint="red">
+    <div class="hint-head">
+      <div>
+        <span class="hint-number">HINT 2</span>
+        <h3>Unlock the second structural idea</h3>
+      </div>
+      <span class="lock-status" id="status-red">🔒 Locked</span>
+    </div>
+
+    <div class="question-block" id="question-red">
+      <p class="question-text">What does RED stand for?</p>
+      <div class="hint-options">
+        <button data-question="red" data-answer="a">Reliable, Efficient, and Dedicated</button>
+        <button data-question="red" data-answer="b">Respectful, Easy to deal with, Dependable</button>
+        <button data-question="red" data-answer="c">Responsive, Empathetic, and Decisive</button>
+      </div>
+      <p class="answer-feedback" id="feedback-red"></p>
+    </div>
+
+    <div class="unlocked-hint hidden" id="hint-red">
+      <div class="design-visual">
+        <svg viewBox="0 0 220 70">
+          <ellipse cx="65" cy="35" rx="16" ry="27" fill="none" stroke="#34d399" stroke-width="4"/>
+          <ellipse cx="110" cy="35" rx="16" ry="27" fill="none" stroke="#34d399" stroke-width="4"/>
+          <ellipse cx="155" cy="35" rx="16" ry="27" fill="none" stroke="#34d399" stroke-width="4"/>
+        </svg>
+      </div>
+      <span class="option-tag green">Option B</span>
+      <h3>Tightly Rolled Paper Tubes</h3>
+      <p>Rolled paper may form lightweight structural elements when secured carefully with limited tape.</p>
+    </div>
+  </div>
+
+  <div class="hint-card" data-hint="redlines">
+    <div class="hint-head">
+      <div>
+        <span class="hint-number">HINT 3</span>
+        <h3>Unlock the third structural idea</h3>
+      </div>
+      <span class="lock-status" id="status-redlines">🔒 Locked</span>
+    </div>
+
+    <div class="question-block" id="question-redlines">
+      <p class="question-text">What are the two red lines?</p>
+      <div class="hint-options">
+        <button data-question="redlines" data-answer="a">Password Sharing and Unauthorised Production Access</button>
+        <button data-question="redlines" data-answer="b">Using Personal Devices and Sending External Email</button>
+        <button data-question="redlines" data-answer="c">Skipping Change Records and Delaying Incident Reports</button>
+      </div>
+      <p class="answer-feedback" id="feedback-redlines"></p>
+    </div>
+
+    <div class="unlocked-hint hidden" id="hint-redlines">
+      <div class="design-visual">
+        <svg viewBox="0 0 220 70">
+          <path d="M45 55V15H175V55M110 15V55" fill="none" stroke="#f59e0b" stroke-width="4"/>
+          <line x1="45" y1="55" x2="175" y2="55" stroke="#fbbf24" stroke-width="3"/>
+        </svg>
+      </div>
+      <span class="option-tag amber">Option C</span>
+      <h3>T-Beams & Layering</h3>
+      <p>Right-angle folds and layered sections may reduce sagging under a centre load.</p>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="awards">
+  <div class="hero">
+    <span class="pill">🏆 TEAM AWARDS</span>
+    <h2>Three Ways to Win</h2>
+    <p>A strong bridge matters, but creativity and team spirit are recognised too.</p>
+  </div>
+  <div id="awardWinnersPanel" class="hidden">
+      <div class="section-title">🎉 Final Winners</div>
+      <div id="awardWinnerCards"></div>
+    </div>
+    <div class="section-title">Award categories</div>
+  <div class="award-card"><div class="award-icon">🥇</div><div><h3>Ultimate Champion</h3><p>Highest combined score across Strength, Teamwork and Innovation.</p></div></div>
+  <div class="award-card"><div class="award-icon">💡</div><div><h3>Most Innovative Design</h3><p>The most creative and distinctive bridge concept, even if it is not the strongest bridge.</p></div></div>
+  <div class="award-card"><div class="award-icon">🔥</div><div><h3>Best Team Spirit</h3><p>The team showing the strongest engagement, energy, communication and cooperation.</p></div></div>
+</section>
+
+<section class="tab" id="checklist">
+  <div class="hero">
+    <span class="pill">✅ BEFORE LOAD TEST</span>
+    <h2>Final Team Checklist</h2>
+    <p>Complete these checks before asking the judges to begin load testing.</p>
+    <div class="progress"><i id="checkProgress"></i></div>
+  </div>
+  <div class="section-title">Ready for inspection?</div>
+      <label class="check"><input type="checkbox">The cans are at least 30 cm apart.</label>
+      <label class="check"><input type="checkbox">No personal items are used for support.</label>
+      <label class="check"><input type="checkbox">The team can explain the design clearly.</label>
+      <label class="check"><input type="checkbox">Everyone is ready for the load test.</label>
+      <label class="check"><input type="checkbox">Ready for 1 min sharing.</label>
+      <div id="bonusGameReveal" class="bonus-game-reveal hidden">
+    <div class="bonus-confetti" aria-hidden="true">🎉 ✨ 🌉 ✨ 🎉</div>
+    <span class="bonus-label">SECRET BONUS UNLOCKED</span>
+    <h3>Bridge Builder Mini-Game</h3>
+    
+    <a class="bonus-game-button" href="bonus-game.html">🎮 PLAY BONUS GAME</a>
+  </div>
+</section>
+</main>
+
+<nav class="bottom">
+  <button class="active" data-tab="intel"><span>📘</span>Intel</button>
+  <button data-tab="timer"><span>⏱️</span>Timer</button>
+  <button data-tab="design"><span>🛠️</span>Design Lab</button>
+  <button data-tab="awards"><span>🏆</span>Awards</button>
+  <button data-tab="checklist"><span>✅</span>Checklist</button>
+</nav>
+</div>
+<script type="module" src="participant.js?v=1.7.18"></script>
+
+<div id="hiddenBonusModal" class="hidden-bonus-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="hiddenBonusTitle">
+  <div class="hidden-bonus-modal">
+    <button id="closeHiddenBonus" class="hidden-bonus-close" aria-label="Close">✕</button>
+    <div id="hiddenBonusQuestionView">
+      <div class="hidden-bonus-sparkles">✨ 🏠 ✨</div>
+      <span class="hidden-bonus-label">SECRET QUESTION FOUND</span>
+      <h2 id="hiddenBonusTitle">One More Challenge</h2>
+      <p class="hidden-bonus-copy">Select your team, then answer the hidden question.</p>
+
+      <label class="hidden-bonus-team-label" for="hiddenBonusTeam">Your team</label>
+      <select id="hiddenBonusTeam">
+        <option value="">Loading teams…</option>
+      </select>
+
+      <p class="hidden-bonus-question">What is the new DBS house call?</p>
+      <div class="hidden-bonus-options">
+        <button data-hidden-answer="a">DBS Lighthouse</button>
+        <button data-hidden-answer="b">DBS Beacon House</button>
+        <button data-hidden-answer="c">DBS Horizon Hub</button>
+        <button data-hidden-answer="d">DBS Homebase</button>
+      </div>
+      <p id="hiddenBonusFeedback" class="answer-feedback"></p>
+    </div>
+
+    <div id="hiddenBonusSuccess" class="hidden hidden-bonus-success">
+      <div class="hidden-bonus-celebration">🎉✨🏆✨🎉</div>
+      <h2>Secret Bonus Unlocked!</h2>
+      <p id="hiddenBonusSuccessText"></p>
+      <button id="finishHiddenBonus" class="hidden-bonus-finish">Got it!</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="intelDareModal" class="intel-dare-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="intelDareTitle">
+  <div class="intel-dare-modal">
+    <button id="closeIntelDare" class="intel-dare-close" aria-label="Close">✕</button>
+
+    <div id="intelDareForm">
+      <div class="intel-dare-warning-icon">⚠️</div>
+      <span class="intel-dare-label">WARNING: HIDDEN PENALTY TRIGGERED</span>
+      <h2 id="intelDareTitle">Are You Brave Enough?</h2>
+      <p class="intel-dare-copy">
+        You tapped Innovation three times. Your team may now face a very serious penalty…
+        Select your team only if you dare.
+      </p>
+
+      <label class="intel-dare-team-label" for="intelDareTeam">Team under investigation</label>
+      <select id="intelDareTeam">
+        <option value="">Loading teams…</option>
+      </select>
+
+      <button id="acceptIntelDare" class="intel-dare-accept">I ACCEPT THE PENALTY</button>
+      <p id="intelDareFeedback" class="answer-feedback"></p>
+    </div>
+
+    <div id="intelDareSuccess" class="hidden intel-dare-success">
+      <div class="intel-dare-celebration">🚨 → 🎉✨🎁✨🎉</div>
+      <h2>Plot Twist!</h2>
+      <p id="intelDareSuccessText"></p>
+      <button id="finishIntelDare" class="intel-dare-finish">Collect the Surprise</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="bridgeBreakModal" class="bridge-break-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="bridgeBreakTitle">
+  <div class="bridge-break-modal">
+    <div class="bridge-break-icon">💥🌉💥</div>
+    <span class="bridge-break-label">CRITICAL OVERLOAD</span>
+    <h2 id="bridgeBreakTitle">Oops… You Broke the Bridge!</h2>
+    <p>
+      Too much enthusiasm, not enough structural support.<br>
+      Fortunately, no A4 paper was harmed permanently.
+    </p>
+    <button id="closeBridgeBreak">Repair the Demo Bridge</button>
+  </div>
+</div>
+
+</body>
+</html>

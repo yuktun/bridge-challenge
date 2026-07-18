@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<title>Strength Load Test</title>
+<link rel="stylesheet" href="styles.css?v=1.7.16">
+</head>
+<body>
+<section id="judgeLogin" class="login-screen">
+  <div class="login-card">
+    <div class="brand"><div class="brand-icon">🏋️</div><div><h1>Strength Load Test</h1><p>HK GIC ENGAGEMENT HUB</p></div></div>
+    <p class="small">Record all six teams on one page.</p>
+    <label class="label" for="judgePassword">Access password</label>
+    <input id="judgePassword" type="password" placeholder="Enter password">
+    <button id="judgeLoginButton" class="primary">Open Load Test Scoring</button>
+    <div id="judgeLoginError" class="msg err"></div>
+  </div>
+</section>
+
+<main id="judgeApp" class="judge-app load-all-app hidden">
+  <header class="judge-header">
+    <div class="brand"><div class="brand-icon">🏋️</div><div><h1>Strength Load Test</h1><p>6 TEAMS · 5 STAGES · 50 POINTS</p></div></div>
+    <div id="connectionBadge" class="connection">Connecting…</div>
+  </header>
+
+  <section class="judge-intro">
+    <b>Automatic saving is enabled.</b> Tap each stage a team passes. Earlier stages are selected automatically.
+    If you remove a stage, later stages are also removed.
+  </section>
+
+  <div id="loadTeamCards" class="load-team-grid"></div>
+
+  <section class="autosave-footer">
+    <div>
+      <strong id="loadCompletion">0 teams tested</strong>
+      <p id="loadAutosaveStatus" class="small">Waiting for test results.</p>
+    </div>
+  </section>
+</main>
+<script type="module" src="load-test.js?v=1.6.3"></script>
+</body>
+</html>

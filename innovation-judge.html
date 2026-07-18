@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<title>Innovation Judging — Managers</title>
+<link rel="stylesheet" href="styles.css?v=1.7.16">
+</head>
+<body>
+<section id="judgeLogin" class="login-screen">
+  <div class="login-card">
+    <div class="brand"><div class="brand-icon">💡</div><div><h1>Innovation Judge</h1><p>HK GIC ENGAGEMENT HUB</p></div></div>
+    <p class="small">Dedicated scoring page for participating managers.</p>
+    <label class="label" for="judgePassword">Access password</label>
+    <input id="judgePassword" type="password" placeholder="Enter password">
+    <button id="judgeLoginButton" class="primary">Open Innovation Scoring</button>
+    <div id="judgeLoginError" class="msg err"></div>
+  </div>
+</section>
+
+<main id="judgeApp" class="judge-app hidden">
+  <header class="judge-header">
+    <div class="brand"><div class="brand-icon">💡</div><div><h1>Innovation Scoring</h1><p>MANAGERS · 20 POINTS PER TEAM</p></div></div>
+    <div id="connectionBadge" class="connection">Connecting…</div>
+  </header>
+
+  <section class="judge-intro">
+    <label class="label" for="judgeName">Your name</label>
+    <input id="judgeName" maxlength="40" placeholder="Enter your name, e.g. Ryan">
+    <p class="small">Your name identifies your submission. Saving again with the same name updates your previous scores.</p>
+  </section>
+
+  <div id="innovationCards" class="judge-card-grid"></div>
+
+  <section class="judge-save-bar">
+    <div>
+      <strong id="innovationCompletion">0 teams scored</strong>
+      <p class="small">The MC page shows the live average across all managers.</p>
+    </div>
+    <button id="saveInnovationButton" class="primary">Submit My Innovation Scores</button>
+  </section>
+  <div id="innovationMessage" class="msg judge-page-message"></div>
+</main>
+<script type="module" src="innovation-judge.js?v=1.6.3"></script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<title>Bridge Challenge — MC Control</title>
+<link rel="stylesheet" href="mc-styles.css?v=1.7.17">
+</head>
+<body>
+<section id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="brand"><div class="brand-icon">🌉</div><div><h1>MC Control</h1><p>HK GIC ENGAGEMENT HUB</p></div></div>
+    <label class="label" for="mcPassword">Password</label>
+    <input id="mcPassword" type="password" autocomplete="current-password" placeholder="Enter MC password">
+    <button id="loginButton" class="primary">Enter Control Panel</button>
+    <div id="loginError" class="msg err"></div>
+  </div>
+</section>
+
+<main id="mcApp" class="mc-app hidden">
+  <header class="mc-header">
+    <div class="brand"><div class="brand-icon">🌉</div><div><h1>Bridge Challenge MC</h1><p>HK GIC ENGAGEMENT HUB</p></div></div>
+    <div id="connectionBadge" class="connection">Connecting…</div>
+  </header>
+
+  <div class="mc-grid">
+    <section class="control-card">
+      <h2>Central Timer</h2>
+      <div class="control-row">
+        <div>
+          <label class="label" for="phaseSelect">Phase</label>
+          <select id="phaseSelect">
+            <option value="0">1 — Strategy & Planning (5m)</option>
+            <option value="1">2 — Bridge Construction (15m)</option>
+            <option value="2">3 — Judging & Load Testing (5m)</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Status</label>
+          <div id="statusText" class="connection">Waiting</div>
+        </div>
+      </div>
+      <div id="mcTime" class="mc-time">05:00</div>
+      <div class="button-row">
+        <button id="startButton" class="primary">Start / Resume</button>
+        <button id="pauseButton" class="secondary">Pause</button>
+        <button id="resetButton" class="secondary">Reset Phase</button>
+        <button id="nextButton" class="ghost-btn">Next Phase</button>
+        <button id="completeButton" class="danger">Complete Phase</button>
+      </div>
+      <p class="small">The participant Timer tab reads this shared Firebase state. Starting, pausing or changing phase updates connected phones automatically.</p>
+      <div id="controlMessage" class="msg"></div>
+    </section>
+
+    <section class="control-card">
+      <h2>Live Announcement</h2>
+      <label class="label" for="announcementText">Message</label>
+      <textarea id="announcementText" rows="5" maxlength="240" placeholder="Example: Construction starts in 1 minute."></textarea>
+      <label class="label" for="announcementType">Style</label>
+      <select id="announcementType">
+        <option value="info">Information</option>
+        <option value="warning">Warning</option>
+        <option value="success">Success</option>
+        <option value="danger">Urgent</option>
+      </select>
+      <div class="button-row">
+        <button id="sendAnnouncement" class="primary">Publish Announcement</button>
+        <button id="clearAnnouncement" class="secondary">Clear</button>
+      </div>
+      <p class="small">The announcement appears above every participant page, regardless of which tab they are viewing.</p>
+      <div id="announcementMessage" class="msg"></div>
+    </section>
+  </div>
+  
+    <section class="control-card event-settings-card">
+      <h2>Event Setup</h2>
+      <div class="control-row">
+        <div>
+          <label class="label" for="teamCountSelect">Number of teams</label>
+          <select id="teamCountSelect">
+            <option value="2">2 teams</option>
+            <option value="3">3 teams</option>
+            <option value="4">4 teams</option>
+            <option value="5">5 teams</option>
+            <option value="6">6 teams</option>
+            <option value="7">7 teams</option>
+            <option value="8">8 teams</option>
+            <option value="9">9 teams</option>
+            <option value="10">10 teams</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Current setup</label>
+          <span id="teamCountStatus" class="connection">6 teams</span>
+        </div>
+      </div>
+      <p class="small">This updates the Teamwork, Innovation, Load Test and result pages. Changing the number does not delete existing scores.</p>
+      <div id="settingsMessage" class="msg"></div>
+    </section>
+
+    <section class="control-card award-control-card">
+      <div class="section-heading-row">
+        <div>
+          <h2>Final Award Winners</h2>
+          <p class="small">Select one or more winning teams for each award. The participant Awards tab updates automatically.</p>
+        </div>
+        <button id="resetAwardsButton" class="secondary compact-btn">Reset Awards</button>
+      </div>
+      <div class="award-control-grid">
+        <div class="award-multi-group">
+          <span class="award-multi-title">🥇 Ultimate Champion</span>
+          <div id="championChoices" class="award-team-choices"></div>
+        </div>
+        <div class="award-multi-group">
+          <span class="award-multi-title">💡 Most Innovative Design</span>
+          <div id="innovationWinnerChoices" class="award-team-choices"></div>
+        </div>
+        <div class="award-multi-group">
+          <span class="award-multi-title">🔥 Best Team Spirit</span>
+          <div id="spiritWinnerChoices" class="award-team-choices"></div>
+        </div>
+      </div>
+      <div id="awardControlMessage" class="msg"></div>
+    </section>
+
+    <section class="control-card judging-results-card">
+    <div class="section-heading-row">
+      <div>
+        <h2>Live Judging Results</h2>
+        <p class="small">Teamwork is scored by Kitty out of 30. Innovation is the average of all manager submissions out of 20.</p>
+      </div>
+      <button id="clearJudgingButton" class="danger compact-btn">Clear judging scores</button>
+    </div>
+
+    <div class="judge-links">
+      <a href="teamwork-judge.html" target="_blank">Open Kitty’s Teamwork Page ↗</a>
+      <a href="innovation-judge.html" target="_blank">Open Managers’ Innovation Page ↗</a>
+      <a href="load-test.html" target="_blank">Open Strength Load-Test Page ↗</a>
+    </div>
+
+    <div class="table-scroll">
+      <table class="judge-results-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>Strength<br><span>/50</span></th>
+            <th>Teamwork<br><span>/30</span></th>
+            <th>Innovation Avg.<br><span>/20</span></th>
+            <th>Manager Votes</th>
+            <th>Total<br><span>/100</span></th>
+          </tr>
+        </thead>
+        <tbody id="judgingResultsBody">
+          <tr><td colspan="7" class="empty-score">Waiting for judging scores…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="judging-summary">
+      <span id="teamworkStatusBadge" class="connection">Teamwork: not submitted</span>
+      <span id="innovationStatusBadge" class="connection">Innovation: 0 managers</span>
+    </div>
+
+    <div id="judgingMessage" class="msg"></div>
+  </section>
+
+  <section class="control-card manager-entry-card">
+    <div class="section-heading-row">
+      <div>
+        <h2>Manager Innovation Submissions</h2>
+        <p class="small">Reference only. Delete an individual record if a manager submitted twice using different names.</p>
+      </div>
+    </div>
+    <div id="managerEntries" class="manager-entry-list">
+      <p class="empty-score">No manager submissions yet.</p>
+    </div>
+    <div id="managerEntryMessage" class="msg"></div>
+  </section>
+
+
+  <section class="control-card bonus-admin-card">
+    <div class="section-heading-row">
+      <div>
+        <h2>Bonus Game Results</h2>
+        <p class="small">Live Firebase leaderboard and teams that unlocked the one-time extra-resource reward.</p>
+      </div>
+      <button id="clearBonusGameButton" class="danger compact-btn">Clear Bonus Results</button>
+    </div>
+    <div class="judging-summary">
+      <span id="bonusEntryBadge" class="connection">0 leaderboard entries</span>
+      <span id="bonusRewardBadge" class="connection">0 teams qualified</span>
+    </div>
+    <div id="bonusAdminList" class="bonus-admin-list">
+      <p class="empty-score">No bonus-game results yet.</p>
+    </div>
+    <div id="bonusAdminMessage" class="msg"></div>
+  </section>
+
+
+  <section class="control-card hidden-bonus-admin-card">
+    <div class="section-heading-row">
+      <div>
+        <h2>Hidden Design Lab Bonus</h2>
+        <p class="small">Teams that answered the secret fourth question and unlocked the one-time extra resource.</p>
+      </div>
+      <button id="clearHiddenBonusButton" class="danger compact-btn">Clear Hidden Bonus</button>
+    </div>
+    <div id="hiddenBonusAdminList" class="bonus-admin-list">
+      <p class="empty-score">No teams have unlocked the hidden bonus yet.</p>
+    </div>
+    <div id="hiddenBonusAdminMessage" class="msg"></div>
+  </section>
+
+
+  <section class="control-card intel-dare-admin-card">
+    <div class="section-heading-row">
+      <div>
+        <h2>Intel Innovation Dare Bonus</h2>
+        <p class="small">Teams that triple-tapped Innovation and accepted the playful penalty.</p>
+      </div>
+      <button id="clearIntelDareButton" class="danger compact-btn">Clear Intel Dare Bonus</button>
+    </div>
+    <div id="intelDareAdminList" class="bonus-admin-list">
+      <p class="empty-score">No teams have discovered this surprise yet.</p>
+    </div>
+    <div id="intelDareAdminMessage" class="msg"></div>
+  </section>
+
+
+  <section class="control-card super-bonus-admin-card">
+    <div class="section-heading-row">
+      <div>
+        <h2>Super Bonus Announcements</h2>
+        <p class="small">A team is announced automatically after completing the Bonus Game reward, Design Lab hidden question and Intel dare.</p>
+      </div>
+      <div class="button-row">
+        <button id="clearSuperBonusMessageButton" class="secondary compact-btn">Clear Winner Message</button>
+        <button id="clearSuperBonusButton" class="danger compact-btn">Reset Super Bonus</button>
+      </div>
+    </div>
+    
+    <div class="super-bonus-preview">
+      <h3>Dedicated Super Bonus Announcement</h3>
+      <p class="small">This message is separate from Live Announcement and keeps every winning team until cleared.</p>
+      <div id="superBonusAnnouncementPreview" class="announcement success">
+        No Super Bonus winners announced yet.
+      </div>
+    </div>
+
+    <div id="superBonusAdminList" class="bonus-admin-list">
+      <p class="empty-score">No team has completed all three hidden activities yet.</p>
+    </div>
+    <div id="superBonusAdminMessage" class="msg"></div>
+  </section>
+
+</main>
+
+<script>
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const loginButton = document.getElementById("loginButton");
+    const loginError = document.getElementById("loginError");
+    if (loginButton && !loginButton.dataset.moduleReady && loginError && !loginError.textContent) {
+      loginError.textContent = "Control script did not load. Refresh with Ctrl + F5 and confirm config.js and mc.js are uploaded.";
+    }
+  }, 2500);
+});
+</script>
+
+<script type="module" src="mc.js?v=1.7.17"></script>
+</body>
+</html>

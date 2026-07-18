@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "fastestFinger": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "bridgeChallenge": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
