@@ -196,3 +196,8 @@ Version 1.7.20
 - Added a reusable Team Spirit confetti button after the first three checklist items are complete.
 - Team Spirit includes a five-second cooldown and reduced-motion support.
 - All three additions are visual only and do not read from or write to Firebase.
+
+
+Version 1.7.21
+- Team Spirit now unlocks when the first checklist item is checked.
+- The existing first-three-items, five-second Bonus Game unlock remains unchanged.
