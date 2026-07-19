@@ -188,3 +188,11 @@ Version 1.7.18
 
 Version 1.7.19
 - Updated the Bonus Game top-left title from BRIDGE CHALLENGE to GIC BRIDGE CHALLENGE.
+
+
+Version 1.7.20
+- Added an independent four-tap coffee-can disturbance joke to each mission diagram can.
+- Added a three-tap fake gap-violation warning that resets the diagram after closing.
+- Added a reusable Team Spirit confetti button after the first three checklist items are complete.
+- Team Spirit includes a five-second cooldown and reduced-motion support.
+- All three additions are visual only and do not read from or write to Firebase.
