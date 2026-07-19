@@ -117,8 +117,9 @@ function updateChecklistProgress() {
 
   // The secret game now unlocks when the first three checklist items are complete.
   const firstThreeComplete = checks.slice(0, 3).every(item => item.checked);
+  const firstChecklistItemComplete = Boolean(checks[0]?.checked);
   const reveal = el("bonusGameReveal");
-  teamSpiritControl?.classList.toggle("hidden", !firstThreeComplete);
+  teamSpiritControl?.classList.toggle("hidden", !firstChecklistItemComplete);
 
   if (firstThreeComplete && !bonusAlreadyRevealed && !bonusRevealTimer) {
     bonusRevealTimer = setTimeout(() => {
