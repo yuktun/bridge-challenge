@@ -109,6 +109,7 @@ hot.forEach(part => {
 const checks = [...document.querySelectorAll(".check input")];
 let bonusRevealTimer = null;
 let bonusAlreadyRevealed = false;
+const teamSpiritControl = el("teamSpiritControl");
 
 function updateChecklistProgress() {
   const checkedCount = checks.filter(item => item.checked).length;
@@ -117,6 +118,7 @@ function updateChecklistProgress() {
   // The secret game now unlocks when the first three checklist items are complete.
   const firstThreeComplete = checks.slice(0, 3).every(item => item.checked);
   const reveal = el("bonusGameReveal");
+  teamSpiritControl?.classList.toggle("hidden", !firstThreeComplete);
 
   if (firstThreeComplete && !bonusAlreadyRevealed && !bonusRevealTimer) {
     bonusRevealTimer = setTimeout(() => {
@@ -135,6 +137,66 @@ function updateChecklistProgress() {
 }
 
 checks.forEach(item => item.addEventListener("change", updateChecklistProgress));
+
+const teamSpiritButton = el("activateTeamSpirit");
+const teamSpiritStatus = el("teamSpiritStatus");
+const teamSpiritEffects = el("teamSpiritEffects");
+let teamSpiritCooldownTimer = null;
+let teamSpiritEffectTimer = null;
+
+function clearTeamSpiritEffects() {
+  clearTimeout(teamSpiritEffectTimer);
+  document.body.classList.remove("team-spirit-glow");
+  teamSpiritEffects?.classList.remove("team-spirit-effects-active");
+  if (teamSpiritEffects) teamSpiritEffects.replaceChildren();
+}
+
+function launchTeamSpiritEffects() {
+  clearTeamSpiritEffects();
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const symbols = ["🎉", "🔥", "✨", "🌉", "💪"];
+  const particleCount = reducedMotion ? 8 : 42;
+
+  for (let index = 0; index < particleCount; index += 1) {
+    const particle = document.createElement("span");
+    particle.textContent = symbols[index % symbols.length];
+    particle.style.setProperty("--confetti-x", `${Math.random() * 100}vw`);
+    particle.style.setProperty("--confetti-drift", `${(Math.random() - .5) * 180}px`);
+    particle.style.setProperty("--confetti-delay", `${Math.random() * .55}s`);
+    particle.style.setProperty("--confetti-duration", `${2.1 + Math.random() * .8}s`);
+    teamSpiritEffects?.appendChild(particle);
+  }
+
+  document.body.classList.add("team-spirit-glow");
+  teamSpiritEffects?.classList.add("team-spirit-effects-active");
+  teamSpiritEffectTimer = setTimeout(clearTeamSpiritEffects, 3000);
+}
+
+function activateTeamSpirit() {
+  if (!teamSpiritButton || teamSpiritButton.disabled) return;
+
+  launchTeamSpiritEffects();
+  openVisualEasterEgg({
+    kind: "team-spirit",
+    icon: "🔥🎉🔥",
+    title: "TEAM SPIRIT ACTIVATED! 🔥",
+    copy: "Communication +10\nConfidence +20\nActual score still judged by Kitty.",
+    button: "We Are Ready!"
+  });
+
+  teamSpiritButton.disabled = true;
+  teamSpiritButton.textContent = "🔥 TEAM SPIRIT ACTIVE";
+  if (teamSpiritStatus) teamSpiritStatus.textContent = "Recharging Team Spirit…";
+
+  clearTimeout(teamSpiritCooldownTimer);
+  teamSpiritCooldownTimer = setTimeout(() => {
+    teamSpiritButton.disabled = false;
+    teamSpiritButton.textContent = "🔥 ACTIVATE TEAM SPIRIT";
+    if (teamSpiritStatus) teamSpiritStatus.textContent = "";
+  }, 5000);
+}
+
+teamSpiritButton?.addEventListener("click", activateTeamSpirit);
 
 signInAnonymously(auth).catch(console.error);
 
@@ -646,14 +708,14 @@ function resetMissionBridgeBreak() {
 
   missionLoadBlock?.classList.remove("load-overload-grow", "load-overload-drop");
   missionBridgeDeck?.classList.remove("bridge-shake", "bridge-broken");
-  document.querySelector(".diagram")?.classList.remove("diagram-overload");
+  document.querySelector(".blueprint")?.classList.remove("diagram-overload");
 }
 
 function openBridgeBreakSurprise() {
   if (bridgeBreakRunning) return;
   bridgeBreakRunning = true;
 
-  const diagram = document.querySelector(".diagram");
+  const diagram = document.querySelector(".blueprint");
   diagram?.classList.add("diagram-overload");
   missionLoadBlock?.classList.add("load-overload-grow");
   missionBridgeDeck?.classList.add("bridge-shake");
@@ -709,3 +771,149 @@ bridgeBreakModal?.addEventListener("click", event => {
   bridgeBreakModal.classList.remove("bridge-break-visible");
   resetMissionBridgeBreak();
 });
+
+
+// Reusable visual-only popup and timed multi-tap triggers.
+const visualEasterModal = el("visualEasterEggModal");
+const visualEasterTitle = el("visualEasterTitle");
+const visualEasterCopy = el("visualEasterCopy");
+const visualEasterIcon = el("visualEasterIcon");
+const closeVisualEaster = el("closeVisualEaster");
+let visualEasterCleanup = null;
+let visualEasterPreviousFocus = null;
+
+function closeVisualEasterEgg() {
+  visualEasterModal?.classList.add("hidden");
+  visualEasterModal?.classList.remove("visual-easter-visible", "coffee", "gap-warning", "team-spirit");
+  const cleanup = visualEasterCleanup;
+  visualEasterCleanup = null;
+  cleanup?.();
+  visualEasterPreviousFocus?.focus?.();
+  visualEasterPreviousFocus = null;
+}
+
+function openVisualEasterEgg({ kind, icon, title, copy, button, onClose }) {
+  if (!visualEasterModal) return;
+  if (!visualEasterModal.classList.contains("hidden")) closeVisualEasterEgg();
+
+  visualEasterPreviousFocus = document.activeElement;
+  visualEasterCleanup = onClose || null;
+  visualEasterIcon.textContent = icon;
+  visualEasterTitle.textContent = title;
+  visualEasterCopy.textContent = copy;
+  closeVisualEaster.textContent = button;
+  visualEasterModal.classList.add(kind, "visual-easter-visible");
+  visualEasterModal.classList.remove("hidden");
+  closeVisualEaster.focus();
+}
+
+closeVisualEaster?.addEventListener("click", closeVisualEasterEgg);
+visualEasterModal?.addEventListener("click", event => {
+  if (event.target === visualEasterModal) closeVisualEasterEgg();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !visualEasterModal?.classList.contains("hidden")) {
+    closeVisualEasterEgg();
+  }
+});
+
+function createRepeatedTapTrigger(element, requiredTaps, windowMs, onTrigger) {
+  let tapCount = 0;
+  let firstTapTime = 0;
+  let resetTimer = null;
+
+  function reset() {
+    tapCount = 0;
+    firstTapTime = 0;
+    clearTimeout(resetTimer);
+    resetTimer = null;
+  }
+
+  function register(event) {
+    event?.preventDefault();
+    const now = Date.now();
+    if (!firstTapTime || now - firstTapTime > windowMs) {
+      tapCount = 0;
+      firstTapTime = now;
+    }
+
+    tapCount += 1;
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(reset, Math.max(0, windowMs - (now - firstTapTime)));
+
+    if (tapCount >= requiredTaps) {
+      reset();
+      onTrigger();
+    }
+  }
+
+  element?.addEventListener("click", register);
+  element?.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") register(event);
+  });
+
+  return { reset };
+}
+
+const missionCoffeeCanLeft = el("missionCoffeeCanLeft");
+const missionCoffeeCanRight = el("missionCoffeeCanRight");
+const missionGapIndicator = el("missionGapIndicator");
+const missionBlueprint = document.querySelector(".blueprint");
+let leftCoffeeTapTrigger = null;
+let rightCoffeeTapTrigger = null;
+let gapTapTrigger = null;
+let gapPopupTimer = null;
+
+function triggerCoffeeCanDisturbance(can, tapTrigger) {
+  can?.classList.add("coffee-can-disturbed");
+  openVisualEasterEgg({
+    kind: "coffee",
+    icon: "☕♨☕",
+    title: "Coffee Can Disturbance Detected ☕",
+    copy: "Please stop testing the coffee before testing the bridge.\nThe can has officially filed a complaint.",
+    button: "Let the Can Rest",
+    onClose: () => {
+      can?.classList.remove("coffee-can-disturbed");
+      tapTrigger?.reset();
+    }
+  });
+}
+
+leftCoffeeTapTrigger = createRepeatedTapTrigger(missionCoffeeCanLeft, 4, 2000, () => {
+  triggerCoffeeCanDisturbance(missionCoffeeCanLeft, leftCoffeeTapTrigger);
+});
+rightCoffeeTapTrigger = createRepeatedTapTrigger(missionCoffeeCanRight, 4, 2000, () => {
+  triggerCoffeeCanDisturbance(missionCoffeeCanRight, rightCoffeeTapTrigger);
+});
+
+function resetGapWarning() {
+  clearTimeout(gapPopupTimer);
+  missionGapIndicator?.classList.remove("gap-violation-active");
+  missionCoffeeCanLeft?.classList.remove("gap-can-inward");
+  missionCoffeeCanRight?.classList.remove("gap-can-inward");
+  missionBlueprint?.classList.remove("gap-diagram-shake");
+  gapTapTrigger?.reset();
+}
+
+function triggerGapWarning() {
+  missionGapIndicator?.classList.add("gap-violation-active");
+  missionCoffeeCanLeft?.classList.add("gap-can-inward");
+  missionCoffeeCanRight?.classList.add("gap-can-inward");
+  missionBlueprint?.classList.add("gap-diagram-shake");
+
+  openVisualEasterEgg({
+    kind: "gap-warning",
+    icon: "🚨📏🚨",
+    title: "GAP VIOLATION DETECTED 🚨",
+    copy: "Engineering enforcement has been notified.",
+    button: "Restore Safe Distance",
+    onClose: resetGapWarning
+  });
+
+  gapPopupTimer = setTimeout(() => {
+    if (!visualEasterModal?.classList.contains("gap-warning")) return;
+    visualEasterCopy.textContent = "Just kidding. No engineers are coming.\nPlease keep the cans at least 30 cm apart.";
+  }, 1000);
+}
+
+gapTapTrigger = createRepeatedTapTrigger(missionGapIndicator, 3, 2000, triggerGapWarning);
