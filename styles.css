@@ -911,21 +911,18 @@ body.team-spirit-glow::after{animation:teamSpiritGlow .55s ease-in-out 5 alterna
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
 }
 .workflow-modal{
-  position:fixed;inset:0;z-index:2200;background:rgba(1,5,16,.78);display:grid;
-  grid-template-rows:auto minmax(0,1fr) auto;gap:10px;
-  padding:max(18px,env(safe-area-inset-top)) max(18px,calc((100vw - 1180px)/2)) max(18px,env(safe-area-inset-bottom));
+  position:fixed;inset:0;z-index:2200;background:rgba(1,5,16,.94);display:block;padding:0;
   backdrop-filter:blur(18px) saturate(.8);-webkit-backdrop-filter:blur(18px) saturate(.8);
   animation:workflow-backdrop-in .24s ease-out
 }
 .workflow-modal.hidden{display:none}
 .workflow-modal-toolbar{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 10px 18px;
-  color:#f8fafc;border:1px solid rgba(148,163,184,.16);border-radius:18px;
-  background:rgba(15,23,42,.76);box-shadow:0 12px 36px rgba(0,0,0,.24);
-  animation:workflow-panel-in .3s cubic-bezier(.2,.8,.2,1)
+  position:absolute;z-index:2;top:max(12px,env(safe-area-inset-top));left:14px;right:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;color:#f8fafc;
+  pointer-events:none;animation:workflow-panel-in .3s cubic-bezier(.2,.8,.2,1)
 }
-.workflow-modal-toolbar strong{font-size:14px;letter-spacing:.01em}
-.workflow-zoom-controls{display:flex;align-items:center;gap:7px}
+.workflow-modal-toolbar strong{font-size:14px;letter-spacing:.01em;text-shadow:0 2px 12px #000}
+.workflow-zoom-controls{display:flex;align-items:center;gap:7px;pointer-events:auto}
 .workflow-zoom-controls button{
   min-width:40px;height:40px;padding:0 11px;border:1px solid rgba(148,163,184,.18);border-radius:12px;
   background:rgba(30,41,59,.82);color:#f8fafc;font-weight:850;font-size:16px;cursor:pointer;
@@ -938,19 +935,21 @@ body.team-spirit-glow::after{animation:teamSpiritGlow .55s ease-in-out 5 alterna
 .workflow-zoom-controls .workflow-close{margin-left:5px;background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.28);color:#fecaca}
 .workflow-zoom-controls .workflow-close:hover{background:rgba(248,113,113,.22);border-color:rgba(248,113,113,.5)}
 .workflow-modal-stage{
-  min-height:0;overflow:auto;overscroll-behavior:contain;border:1px solid rgba(148,163,184,.16);border-radius:22px;
-  background:linear-gradient(145deg,#111827,#080d19);touch-action:pan-x pan-y;cursor:grab;position:relative;
-  padding:12px;box-shadow:0 28px 80px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.035);
-  animation:workflow-panel-in .34s cubic-bezier(.2,.8,.2,1)
+  position:absolute;inset:0;overflow:auto;overscroll-behavior:contain;border:0;border-radius:0;
+  background:#020617;touch-action:none;cursor:grab;padding:0;box-shadow:none;
+  animation:workflow-panel-in .34s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;scrollbar-color:#475569 transparent
 }
-.workflow-modal-stage.dragging{cursor:grabbing;user-select:none}
+.workflow-modal-stage.dragging,.workflow-modal-stage.pinching{cursor:grabbing;user-select:none}
 .workflow-modal-stage img{
-  display:block;max-width:none;width:100%;height:auto;border-radius:14px;transform-origin:top left;
-  filter:brightness(.9) saturate(.92) contrast(.98);transition:width .18s cubic-bezier(.2,.8,.2,1),filter .2s ease
+  display:block;max-width:none;width:100%;height:auto;border-radius:0;transform-origin:top left;
+  filter:brightness(.92) saturate(.94) contrast(.98);transition:width .12s ease-out,filter .2s ease;
+  -webkit-user-drag:none;user-select:none
 }
 .workflow-modal-help{
-  justify-self:center;margin:0;padding:8px 14px;color:#a5b4c8;font-size:10px;text-align:center;
-  border:1px solid rgba(148,163,184,.12);border-radius:999px;background:rgba(15,23,42,.58)
+  position:absolute;z-index:2;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);
+  width:max-content;max-width:calc(100% - 28px);margin:0;padding:8px 14px;color:#cbd5e1;font-size:10px;text-align:center;
+  border:1px solid rgba(148,163,184,.14);border-radius:999px;background:rgba(15,23,42,.72);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);pointer-events:none
 }
 body.workflow-modal-open{overflow:hidden}
 @keyframes workflow-backdrop-in{from{opacity:0}to{opacity:1}}
@@ -959,15 +958,15 @@ body.workflow-modal-open{overflow:hidden}
   .workflow-preview{padding:7px;border-radius:17px}
   .workflow-preview img{border-radius:11px}
   .workflow-preview-hint{right:14px;bottom:14px;font-size:9px;padding:7px 10px}
-  .workflow-modal{padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom));gap:7px}
-  .workflow-modal-toolbar{padding:8px;align-items:center;border-radius:15px}
+  .workflow-modal{padding:0}
+  .workflow-modal-toolbar{top:max(8px,env(safe-area-inset-top));left:8px;right:8px;padding:0;align-items:center}
   .workflow-modal-toolbar strong{display:none}
-  .workflow-zoom-controls{width:100%;justify-content:center}
+  .workflow-zoom-controls{width:100%;justify-content:flex-end}
   .workflow-zoom-controls button{min-width:42px;height:42px}
   .workflow-zoom-controls .workflow-close{margin-left:auto}
-  .workflow-modal-stage{padding:7px;border-radius:16px}
-  .workflow-modal-stage img{border-radius:10px}
-  .workflow-modal-help{font-size:9px;padding:6px 10px}
+  .workflow-modal-stage{padding:0;border-radius:0}
+  .workflow-modal-stage img{border-radius:0}
+  .workflow-modal-help{bottom:max(8px,env(safe-area-inset-bottom));font-size:9px;padding:6px 10px}
 }
 @media(prefers-reduced-motion:reduce){
   .workflow-preview,.workflow-preview img,.workflow-modal,.workflow-modal-toolbar,.workflow-modal-stage,.workflow-modal-stage img,.workflow-zoom-controls button{

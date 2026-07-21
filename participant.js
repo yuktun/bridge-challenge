@@ -945,6 +945,9 @@ let workflowDragStartY = 0;
 let workflowScrollStartLeft = 0;
 let workflowScrollStartTop = 0;
 let workflowPageScrollY = 0;
+const workflowPointers = new Map();
+let workflowPinchStartDistance = 0;
+let workflowPinchStartZoom = 1;
 
 function currentWorkflowLanguage() {
   return window.bridgeI18n?.getLanguage?.() || document.documentElement.lang || "en";
@@ -1003,6 +1006,17 @@ workflowModalStage?.addEventListener("wheel", event => {
   applyWorkflowZoom(workflowZoom + (event.deltaY < 0 ? 0.15 : -0.15));
 }, { passive:false });
 workflowModalStage?.addEventListener("pointerdown", event => {
+  workflowPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
+  workflowModalStage.setPointerCapture?.(event.pointerId);
+  if (workflowPointers.size === 2) {
+    const [first, second] = [...workflowPointers.values()];
+    workflowPinchStartDistance = Math.hypot(second.x - first.x, second.y - first.y);
+    workflowPinchStartZoom = workflowZoom;
+    workflowDragging = false;
+    workflowModalStage.classList.add("pinching");
+    workflowModalStage.classList.remove("dragging");
+    return;
+  }
   if (workflowZoom <= 1) return;
   workflowDragging = true;
   workflowDragStartX = event.clientX;
@@ -1010,14 +1024,29 @@ workflowModalStage?.addEventListener("pointerdown", event => {
   workflowScrollStartLeft = workflowModalStage.scrollLeft;
   workflowScrollStartTop = workflowModalStage.scrollTop;
   workflowModalStage.classList.add("dragging");
-  workflowModalStage.setPointerCapture?.(event.pointerId);
 });
 workflowModalStage?.addEventListener("pointermove", event => {
+  if (!workflowPointers.has(event.pointerId)) return;
+  workflowPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
+  if (workflowPointers.size >= 2) {
+    const [first, second] = [...workflowPointers.values()];
+    const distance = Math.hypot(second.x - first.x, second.y - first.y);
+    if (workflowPinchStartDistance > 0) {
+      applyWorkflowZoom(workflowPinchStartZoom * (distance / workflowPinchStartDistance));
+    }
+    event.preventDefault();
+    return;
+  }
   if (!workflowDragging) return;
   workflowModalStage.scrollLeft = workflowScrollStartLeft - (event.clientX - workflowDragStartX);
   workflowModalStage.scrollTop = workflowScrollStartTop - (event.clientY - workflowDragStartY);
 });
-function stopWorkflowDrag() {
+function stopWorkflowDrag(event) {
+  if (event?.pointerId !== undefined) workflowPointers.delete(event.pointerId);
+  if (workflowPointers.size < 2) {
+    workflowPinchStartDistance = 0;
+    workflowModalStage?.classList.remove("pinching");
+  }
   workflowDragging = false;
   workflowModalStage?.classList.remove("dragging");
 }
