@@ -948,6 +948,7 @@ let workflowPageScrollY = 0;
 const workflowPointers = new Map();
 let workflowPinchStartDistance = 0;
 let workflowPinchStartZoom = 1;
+let workflowFitScale = 1;
 
 function currentWorkflowLanguage() {
   return window.bridgeI18n?.getLanguage?.() || document.documentElement.lang || "en";
@@ -963,10 +964,33 @@ function updateWorkflowLanguage() {
   if (workflowModalImage) workflowModalImage.src = src;
 }
 
-function applyWorkflowZoom(nextZoom) {
+function centerWorkflowDiagram() {
+  if (!workflowModalStage) return;
+  requestAnimationFrame(() => {
+    workflowModalStage.scrollLeft = Math.max(0, (workflowModalStage.scrollWidth - workflowModalStage.clientWidth) / 2);
+    workflowModalStage.scrollTop = 0;
+  });
+}
+
+function applyWorkflowZoom(nextZoom, center = false) {
   workflowZoom = Math.min(4, Math.max(0.5, nextZoom));
-  if (workflowModalImage) workflowModalImage.style.width = `${workflowZoom * 100}%`;
+  if (workflowModalImage) workflowModalImage.style.width = `${workflowFitScale * workflowZoom * 100}%`;
   if (workflowZoomReset) workflowZoomReset.textContent = `${Math.round(workflowZoom * 100)}%`;
+  if (center) centerWorkflowDiagram();
+}
+
+function fitWorkflowDiagram() {
+  if (!workflowModalStage || !workflowModalImage) return;
+  const imageRatio = workflowModalImage.naturalWidth / workflowModalImage.naturalHeight;
+  if (!Number.isFinite(imageRatio) || imageRatio <= 0) return;
+  workflowModalStage.style.height = "";
+  const stageWidth = workflowModalStage.clientWidth;
+  const reservedHeight = window.matchMedia("(max-width: 640px)").matches ? 154 : 180;
+  const availableHeight = Math.min(760, window.innerHeight * 0.7, Math.max(180, window.innerHeight - reservedHeight));
+  const fittedHeight = Math.min(stageWidth / imageRatio, availableHeight);
+  workflowModalStage.style.height = `${Math.round(fittedHeight)}px`;
+  workflowFitScale = Math.min(1, (fittedHeight * imageRatio) / stageWidth);
+  applyWorkflowZoom(1, true);
 }
 
 function openWorkflowModal() {
@@ -974,11 +998,7 @@ function openWorkflowModal() {
   workflowPageScrollY = window.scrollY;
   workflowModal?.classList.remove("hidden");
   document.body.classList.add("workflow-modal-open");
-  applyWorkflowZoom(1);
-  if (workflowModalStage) {
-    workflowModalStage.scrollLeft = 0;
-    workflowModalStage.scrollTop = 0;
-  }
+  requestAnimationFrame(fitWorkflowDiagram);
 }
 
 function closeWorkflowModal() {
@@ -993,7 +1013,11 @@ workflowPreview?.addEventListener("click", openWorkflowModal);
 workflowModalClose?.addEventListener("click", closeWorkflowModal);
 workflowZoomIn?.addEventListener("click", () => applyWorkflowZoom(workflowZoom + 0.25));
 workflowZoomOut?.addEventListener("click", () => applyWorkflowZoom(workflowZoom - 0.25));
-workflowZoomReset?.addEventListener("click", () => applyWorkflowZoom(1));
+workflowZoomReset?.addEventListener("click", fitWorkflowDiagram);
+workflowModalImage?.addEventListener("load", fitWorkflowDiagram);
+window.addEventListener("resize", () => {
+  if (!workflowModal?.classList.contains("hidden")) fitWorkflowDiagram();
+});
 workflowModal?.addEventListener("click", event => {
   if (event.target === workflowModal) closeWorkflowModal();
 });

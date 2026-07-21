@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#020617">
 <title>PRIDE Bridge Challenge</title>
-<link rel="stylesheet" href="styles.css?v=1.7.30">
+<link rel="stylesheet" href="styles.css?v=1.7.31">
 </head>
 <body>
 <div class="app">
@@ -281,24 +281,29 @@
 </nav>
 </div>
 <script src="i18n.js?v=1.0.0"></script>
-<script type="module" src="participant.js?v=1.7.30"></script>
+<script type="module" src="participant.js?v=1.7.31"></script>
 
 <div id="teamSpiritEffects" class="team-spirit-effects" aria-hidden="true"></div>
 
 <div id="workflowModal" class="workflow-modal hidden" role="dialog" aria-modal="true" aria-labelledby="workflowModalTitle">
-  <div class="workflow-modal-toolbar">
-    <strong id="workflowModalTitle">Bridge Challenge Game Flow</strong>
-    <div class="workflow-zoom-controls" aria-label="Zoom controls">
-      <button id="workflowZoomOut" type="button" aria-label="Zoom out">−</button>
-      <button id="workflowZoomReset" type="button">100%</button>
-      <button id="workflowZoomIn" type="button" aria-label="Zoom in">＋</button>
-      <button id="workflowModalClose" class="workflow-close" type="button" aria-label="Close">✕</button>
+  <div class="workflow-modal-dialog">
+    <div class="workflow-modal-toolbar">
+      <div class="workflow-modal-heading">
+        <span class="workflow-modal-eyebrow">GAME GUIDE</span>
+        <strong id="workflowModalTitle">Bridge Challenge Game Flow</strong>
+      </div>
+      <div class="workflow-zoom-controls" aria-label="Zoom controls">
+        <button id="workflowZoomOut" type="button" aria-label="Zoom out">−</button>
+        <button id="workflowZoomReset" type="button" aria-label="Reset zoom">100%</button>
+        <button id="workflowZoomIn" type="button" aria-label="Zoom in">＋</button>
+        <button id="workflowModalClose" class="workflow-close" type="button" aria-label="Close">✕</button>
+      </div>
     </div>
+    <div class="workflow-modal-stage" id="workflowModalStage">
+      <img id="workflowModalImage" src="game-flow-en.png" alt="Bridge Challenge game flow diagram">
+    </div>
+    <p class="workflow-modal-help">Pinch, scroll, or use the buttons to zoom. Drag the diagram to inspect details.</p>
   </div>
-  <div class="workflow-modal-stage" id="workflowModalStage">
-    <img id="workflowModalImage" src="game-flow-en.png" alt="Bridge Challenge game flow diagram">
-  </div>
-  <p class="workflow-modal-help">Pinch, scroll, or use the buttons to zoom. Drag the diagram to inspect details.</p>
 </div>
 
 
