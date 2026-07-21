@@ -90,14 +90,20 @@ const hot = [...document.querySelectorAll(".hot")];
 function activate(part){
   const box = el("diagramInfo");
   hot.forEach(x => { x.classList.toggle("active", x===part); x.classList.toggle("dim", x!==part); });
-  box.textContent = info[part.dataset.part];
+  box.textContent = window.bridgeI18n?.t(info[part.dataset.part]) || info[part.dataset.part];
   box.classList.add("highlight");
 }
 function clear(){
   hot.forEach(x => x.classList.remove("active","dim"));
-  el("diagramInfo").textContent = "✨ Move over or tap a bridge component to inspect the rules.";
+  el("diagramInfo").textContent = window.bridgeI18n?.t("✨ Move over or tap a bridge component to inspect the rules.") || "✨ Move over or tap a bridge component to inspect the rules.";
   el("diagramInfo").classList.remove("highlight");
 }
+
+window.addEventListener("bridge-language-change", () => {
+  const activePart = document.querySelector(".hot.active");
+  if (activePart) activate(activePart); else clear();
+});
+
 hot.forEach(part => {
   part.addEventListener("mouseenter",()=>activate(part));
   part.addEventListener("mouseleave",clear);
@@ -432,12 +438,13 @@ document.querySelectorAll("[data-hidden-answer]").forEach(button => {
       hiddenBonusSuccess.classList.remove("hidden");
 
       if (result.committed && firstUnlock) {
-        el("hiddenBonusSuccessText").innerHTML =
-          `<strong>${teamName}</strong> has unlocked one extra resource. ` +
-          `Show this message and check with <strong>Nixon</strong>.`;
+        el("hiddenBonusSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
+          ? `<strong>${teamName}</strong> 已解鎖一份額外資源。請出示此訊息並向<strong>活動工作人員</strong>領取。`
+          : `<strong>${teamName}</strong> has unlocked one extra resource. Show this message and check with <strong>the event team</strong>.`;
       } else {
-        el("hiddenBonusSuccessText").innerHTML =
-          `<strong>${teamName}</strong> has already claimed this hidden bonus once.`;
+        el("hiddenBonusSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
+          ? `<strong>${teamName}</strong> 已經領取過一次這項隱藏獎勵。`
+          : `<strong>${teamName}</strong> has already claimed this hidden bonus once.`;
       }
     } catch (error) {
       hiddenBonusFeedback.textContent = error?.message || "Unable to check the reward.";
@@ -553,12 +560,13 @@ el("acceptIntelDare")?.addEventListener("click", async () => {
     intelDareSuccess.classList.remove("hidden");
 
     if (result.committed && firstUnlock) {
-      el("intelDareSuccessText").innerHTML =
-        `There is no penalty. <strong>${teamName}</strong> has discovered a hidden reward! ` +
-        `Show this message and collect one extra resource from <strong>Nixon</strong>.`;
+      el("intelDareSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
+        ? `其實沒有懲罰！<strong>${teamName}</strong> 發現了隱藏獎勵。請出示此訊息並向<strong>活動工作人員</strong>領取一份額外資源。`
+        : `There is no penalty. <strong>${teamName}</strong> has discovered a hidden reward! Show this message and collect one extra resource from <strong>the event team</strong>.`;
     } else {
-      el("intelDareSuccessText").innerHTML =
-        `<strong>${teamName}</strong> already discovered and claimed this surprise once.`;
+      el("intelDareSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
+        ? `<strong>${teamName}</strong> 已經發現並領取過一次這項驚喜。`
+        : `<strong>${teamName}</strong> already discovered and claimed this surprise once.`;
     }
   } catch (error) {
     intelDareFeedback.textContent = error?.message || "Unable to check the surprise reward.";
@@ -918,3 +926,102 @@ function triggerGapWarning() {
 }
 
 gapTapTrigger = createRepeatedTapTrigger(missionGapIndicator, 3, 2000, triggerGapWarning);
+
+
+// v1.7.28 bilingual workflow diagram with full-screen zoom and drag support
+const workflowPreview = el("workflowPreview");
+const workflowPreviewImage = el("workflowPreviewImage");
+const workflowModal = el("workflowModal");
+const workflowModalImage = el("workflowModalImage");
+const workflowModalStage = el("workflowModalStage");
+const workflowZoomIn = el("workflowZoomIn");
+const workflowZoomOut = el("workflowZoomOut");
+const workflowZoomReset = el("workflowZoomReset");
+const workflowModalClose = el("workflowModalClose");
+let workflowZoom = 1;
+let workflowDragging = false;
+let workflowDragStartX = 0;
+let workflowDragStartY = 0;
+let workflowScrollStartLeft = 0;
+let workflowScrollStartTop = 0;
+let workflowPageScrollY = 0;
+
+function currentWorkflowLanguage() {
+  return window.bridgeI18n?.getLanguage?.() || document.documentElement.lang || "en";
+}
+
+function workflowImageSource() {
+  return currentWorkflowLanguage() === "zh-HK" ? "game-flow-zh.png" : "game-flow-en.png";
+}
+
+function updateWorkflowLanguage() {
+  const src = workflowImageSource();
+  if (workflowPreviewImage) workflowPreviewImage.src = src;
+  if (workflowModalImage) workflowModalImage.src = src;
+}
+
+function applyWorkflowZoom(nextZoom) {
+  workflowZoom = Math.min(4, Math.max(0.5, nextZoom));
+  if (workflowModalImage) workflowModalImage.style.width = `${workflowZoom * 100}%`;
+  if (workflowZoomReset) workflowZoomReset.textContent = `${Math.round(workflowZoom * 100)}%`;
+}
+
+function openWorkflowModal() {
+  updateWorkflowLanguage();
+  workflowPageScrollY = window.scrollY;
+  workflowModal?.classList.remove("hidden");
+  document.body.classList.add("workflow-modal-open");
+  applyWorkflowZoom(1);
+  if (workflowModalStage) {
+    workflowModalStage.scrollLeft = 0;
+    workflowModalStage.scrollTop = 0;
+  }
+}
+
+function closeWorkflowModal() {
+  workflowModal?.classList.add("hidden");
+  document.body.classList.remove("workflow-modal-open");
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: workflowPageScrollY, left: 0, behavior: "auto" });
+  });
+}
+
+workflowPreview?.addEventListener("click", openWorkflowModal);
+workflowModalClose?.addEventListener("click", closeWorkflowModal);
+workflowZoomIn?.addEventListener("click", () => applyWorkflowZoom(workflowZoom + 0.25));
+workflowZoomOut?.addEventListener("click", () => applyWorkflowZoom(workflowZoom - 0.25));
+workflowZoomReset?.addEventListener("click", () => applyWorkflowZoom(1));
+workflowModal?.addEventListener("click", event => {
+  if (event.target === workflowModal) closeWorkflowModal();
+});
+window.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !workflowModal?.classList.contains("hidden")) closeWorkflowModal();
+});
+workflowModalStage?.addEventListener("wheel", event => {
+  if (!event.ctrlKey && !event.metaKey) return;
+  event.preventDefault();
+  applyWorkflowZoom(workflowZoom + (event.deltaY < 0 ? 0.15 : -0.15));
+}, { passive:false });
+workflowModalStage?.addEventListener("pointerdown", event => {
+  if (workflowZoom <= 1) return;
+  workflowDragging = true;
+  workflowDragStartX = event.clientX;
+  workflowDragStartY = event.clientY;
+  workflowScrollStartLeft = workflowModalStage.scrollLeft;
+  workflowScrollStartTop = workflowModalStage.scrollTop;
+  workflowModalStage.classList.add("dragging");
+  workflowModalStage.setPointerCapture?.(event.pointerId);
+});
+workflowModalStage?.addEventListener("pointermove", event => {
+  if (!workflowDragging) return;
+  workflowModalStage.scrollLeft = workflowScrollStartLeft - (event.clientX - workflowDragStartX);
+  workflowModalStage.scrollTop = workflowScrollStartTop - (event.clientY - workflowDragStartY);
+});
+function stopWorkflowDrag() {
+  workflowDragging = false;
+  workflowModalStage?.classList.remove("dragging");
+}
+workflowModalStage?.addEventListener("pointerup", stopWorkflowDrag);
+workflowModalStage?.addEventListener("pointercancel", stopWorkflowDrag);
+window.addEventListener("bridge-language-change", updateWorkflowLanguage);
+updateWorkflowLanguage();

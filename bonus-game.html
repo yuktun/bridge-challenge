@@ -27,6 +27,24 @@
             background: rgba(255, 255, 255, 0.2);
             border-radius: 3px;
         }
+        .game-highlight {
+            color: #fbbf24;
+            font-weight: 800;
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.18);
+        }
+        .game-highlight-strong {
+            color: #ffffff;
+            font-weight: 900;
+            background: rgba(245, 158, 11, 0.16);
+            border: 1px solid rgba(245, 158, 11, 0.28);
+            border-radius: 0.35rem;
+            padding: 0.05rem 0.28rem;
+        }
+        [data-language-option].active {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between overflow-x-hidden overflow-y-auto select-none">
@@ -78,6 +96,13 @@
 
             <div id="welcomeScreen" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col overflow-y-auto overscroll-contain p-5 text-center transition-all duration-300 z-20">
                 <div class="space-y-5 pb-4">
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3 max-w-xs mx-auto w-full flex items-center justify-between gap-3">
+                        <span class="text-xs font-bold text-slate-200">Language / 語言</span>
+                        <div class="flex rounded-lg bg-slate-950 p-1 gap-1" role="group" aria-label="Language selector">
+                            <button type="button" data-language-option="en" class="px-3 py-2 rounded-md text-xs font-bold text-slate-300 transition bg-transparent">English</button>
+                            <button type="button" data-language-option="zh-HK" class="px-3 py-2 rounded-md text-xs font-bold text-slate-300 transition bg-transparent">繁體中文</button>
+                        </div>
+                    </div>
                     <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-orange-500/20 animate-bounce">
                         <i class="fa-solid fa-bridge text-4xl text-white"></i>
                     </div>
@@ -94,7 +119,7 @@
                         <select id="teamSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-xs text-white focus:outline-none focus:border-orange-500">
                             <option value="">Loading teams…</option>
                         </select>
-                        <p id="teamSelectStatus" class="text-[9px] text-slate-500 mt-2">A team can unlock the extra resource only once.</p>
+                        <p id="teamSelectStatus" class="text-[10px] leading-relaxed text-slate-400 mt-3"><span>Earn </span><span class="game-highlight-strong">10 points or above</span><span> to unlock </span><span class="game-highlight">one extra resource</span><span> for your team. Each team can unlock it only once.</span></p>
                     </div>
 
                     <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 text-left space-y-3 max-w-xs mx-auto">
@@ -104,15 +129,15 @@
                         <ul class="text-xs text-slate-300 space-y-2">
                             <li class="flex items-start gap-2">
                                 <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">1</span>
-                                <span><strong>Tap & hold</strong> anywhere to extend the bridge upwards.</span>
+                                <span><span class="game-highlight">Tap &amp; hold</span><span> anywhere to extend the bridge upwards.</span></span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">2</span>
-                                <span><strong>Release</strong> to let the bridge fall forward.</span>
+                                <span><span class="game-highlight">Release</span><span> to let the bridge fall forward.</span></span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">3</span>
-                                <span>Land in the <strong>red center</strong> for a Perfect Combo bonus!</span>
+                                <span><span>Land in the </span><span class="game-highlight">red center</span><span> for a </span><span class="game-highlight-strong">Perfect Combo</span><span> bonus!</span></span>
                             </li>
                         </ul>
                     </div>
@@ -198,6 +223,7 @@
         </p>
     </footer>
 
+    <script src="i18n.js"></script>
     <script>
         /* Setup Tone.js synthesizers for fully generated audio */
         let isMuted = false;
@@ -1078,12 +1104,16 @@ submitScoreBtn.addEventListener("click", async event => {
         rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-emerald-500/40 bg-emerald-950/50 p-4 text-left";
         rewardTitle.textContent = "🎉 Extra Resource Unlocked!";
         rewardTitle.className = "text-sm font-extrabold text-emerald-300";
-        rewardText.textContent = `${teamName} is the first from your team to score 10 or above. Show this screen and check with Nixon to receive one extra resource for your team.`;
+        rewardText.textContent = window.bridgeI18n?.language === "zh-HK"
+          ? `${teamName} 是隊內首位取得 10 分或以上的參加者。請出示此畫面並向活動工作人員領取一份額外資源。`
+          : `${teamName} is the first from your team to score 10 or above. Show this screen and check with the event team to receive one extra resource for your team.`;
       } else {
         rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-left";
         rewardTitle.textContent = "⭐ Great score!";
         rewardTitle.className = "text-sm font-extrabold text-amber-300";
-        rewardText.textContent = `${teamName} has already unlocked its one-time extra resource.`;
+        rewardText.textContent = window.bridgeI18n?.language === "zh-HK"
+          ? `${teamName} 已經解鎖並領取過一次額外資源。`
+          : `${teamName} has already unlocked its one-time extra resource.`;
       }
     } else {
       rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-slate-700 bg-slate-900 p-4 text-left";
