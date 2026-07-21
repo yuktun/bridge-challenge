@@ -840,3 +840,92 @@ body.team-spirit-glow::after{animation:teamSpiritGlow .55s ease-in-out 5 alterna
   }
   @keyframes reducedTeamSpirit{50%{opacity:.9}100%{opacity:0}}
 }
+
+/* Participant language selector */
+.language-selector{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 18px;
+  padding:10px 12px;
+  border:1px solid rgba(148,163,184,.25);
+  border-radius:14px;
+  background:rgba(15,23,42,.56);
+}
+.language-selector-label{font-size:.78rem;font-weight:800;color:#cbd5e1;letter-spacing:.04em}
+.language-buttons{display:flex;gap:6px;padding:3px;border-radius:11px;background:rgba(2,6,23,.72)}
+.language-buttons button{
+  border:0;
+  border-radius:8px;
+  padding:7px 11px;
+  background:transparent;
+  color:#94a3b8;
+  font:inherit;
+  font-size:.8rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.language-buttons button.active{background:#4f46e5;color:#fff;box-shadow:0 3px 12px rgba(79,70,229,.35)}
+@media (max-width:430px){
+  .language-selector{align-items:flex-start;flex-direction:column}
+  .language-buttons{width:100%}
+  .language-buttons button{flex:1}
+}
+
+/* v1.7.23 bilingual and scoring fixes */
+.hero:after{pointer-events:none}
+.language-selector,.language-selector *{position:relative;z-index:2}
+.score-segments{display:flex;height:7px;border-radius:99px;overflow:hidden;margin-top:8px;background:#1e293b}
+.score-segments span{display:block;height:100%;border-right:2px solid rgba(2,6,23,.72)}
+.score-segments span:last-child{border-right:0}
+.score-segments .strength-on{width:50%;background:#f59e0b}
+.score-segments .teamwork-off{width:30%;background:rgba(56,189,248,.18)}
+.score-segments .innovation-off{width:20%;background:rgba(52,211,153,.16)}
+.score-segments .strength-off{width:50%;background:rgba(245,158,11,.16)}
+.score-segments .teamwork-on{width:30%;background:#38bdf8}
+.score-segments .innovation-on{width:20%;background:#34d399}
+
+/* v1.7.28 bilingual game-flow diagram and zoom viewer */
+.workflow-preview{
+  width:100%;display:block;padding:0;border:1px solid #334155;border-radius:18px;
+  overflow:hidden;background:#0f172a;cursor:zoom-in;text-align:left;position:relative;
+  box-shadow:0 14px 35px rgba(2,6,23,.28)
+}
+.workflow-preview img{display:block;width:100%;height:auto;background:#fff}
+.workflow-preview-hint{
+  position:absolute;right:12px;bottom:12px;padding:8px 12px;border-radius:999px;
+  background:rgba(2,6,23,.86);border:1px solid rgba(148,163,184,.35);color:#f8fafc;
+  font-size:11px;font-weight:850;backdrop-filter:blur(8px)
+}
+.workflow-modal{
+  position:fixed;inset:0;z-index:2200;background:rgba(2,6,23,.97);display:flex;
+  flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));
+}
+.workflow-modal.hidden{display:none}
+.workflow-modal-toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 4px 10px;color:#f8fafc
+}
+.workflow-modal-toolbar strong{font-size:14px}
+.workflow-zoom-controls{display:flex;align-items:center;gap:7px}
+.workflow-zoom-controls button{
+  min-width:42px;height:40px;padding:0 10px;border:1px solid #475569;border-radius:11px;
+  background:#172033;color:#fff;font-weight:900;font-size:16px;cursor:pointer
+}
+.workflow-zoom-controls #workflowZoomReset{font-size:11px;min-width:58px}
+.workflow-zoom-controls .workflow-close{background:#7f1d1d;border-color:#ef4444}
+.workflow-modal-stage{
+  flex:1;overflow:auto;overscroll-behavior:contain;border:1px solid #334155;border-radius:15px;
+  background:#fff;touch-action:pan-x pan-y;cursor:grab;position:relative
+}
+.workflow-modal-stage.dragging{cursor:grabbing;user-select:none}
+.workflow-modal-stage img{
+  display:block;max-width:none;width:100%;height:auto;transform-origin:top left;transition:width .12s ease
+}
+.workflow-modal-help{margin:8px 4px 0;color:#94a3b8;font-size:10px;text-align:center}
+body.workflow-modal-open{overflow:hidden}
+@media(max-width:640px){
+  .workflow-preview-hint{right:8px;bottom:8px;font-size:9px;padding:6px 9px}
+  .workflow-modal-toolbar{align-items:flex-start;flex-direction:column}
+  .workflow-zoom-controls{width:100%;justify-content:flex-end}
+}

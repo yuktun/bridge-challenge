@@ -44,7 +44,7 @@ Version 1.7 — Secret bonus game
 - Players select their team before playing.
 - A score of 10 or above can unlock one extra resource for that team.
 - Firebase transaction ensures each team can unlock the resource only once.
-- The success screen tells the first qualifying player to check with Nixon.
+- The success screen tells the first qualifying player to check with the event team.
 - MC page shows bonus leaderboard/reward status and can clear all bonus results.
 
 
@@ -94,14 +94,14 @@ Version 1.7.7
 - Correct answer: DBS Lighthouse.
 - Teams select their team before answering.
 - Firebase transaction permits each team to unlock the hidden extra resource only once.
-- Successful first claim tells the team to check with Nixon.
+- Successful first claim tells the team to check with the event team.
 - MC page can view and clear hidden Design Lab bonus claims.
 
 
 Version 1.7.8
 - Triple-click/tap the Innovation card on the Intel page to reveal a playful warning.
 - User selects their team and accepts the fake penalty.
-- First claim for each team reveals an extra resource reward and directs them to Nixon.
+- First claim for each team reveals an extra resource reward and directs them to the event team.
 - Each team can claim the Intel dare bonus only once through Firebase transaction control.
 - MC page can view and clear Intel dare-bonus claims.
 - Checklist bonus game now unlocks after only the first three checklist items are checked for five seconds.
