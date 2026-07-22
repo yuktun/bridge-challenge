@@ -30,6 +30,33 @@ button:disabled{opacity:.5;cursor:not-allowed}
 main{padding:18px 16px}
 .tab{display:none;animation:fade .22s ease}.tab.active{display:block}
 @keyframes fade{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* Optional homepage ambience — remove this block to restore the static background. */
+#intel{position:relative;isolation:isolate}
+#intel::before,#intel::after{content:"";position:absolute;pointer-events:none;z-index:-1}
+#intel::before{
+  inset:-18px -16px -90px;min-height:calc(100vh - 72px);
+  background:
+    radial-gradient(ellipse at 12% 8%,rgba(79,70,229,.13),transparent 38%),
+    radial-gradient(ellipse at 88% 30%,rgba(14,165,233,.1),transparent 36%),
+    linear-gradient(145deg,rgba(2,6,23,.2),rgba(15,23,42,.1),rgba(2,6,23,.22));
+  background-size:125% 125%,135% 135%,180% 180%;
+  animation:homeAmbientGradient 28s ease-in-out infinite alternate
+}
+#intel::after{
+  top:110px;left:-90px;width:250px;height:250px;border-radius:50%;
+  background:rgba(56,189,248,.12);filter:blur(70px);opacity:.55;
+  box-shadow:330px 390px 0 35px rgba(99,102,241,.1);
+  animation:homeAmbientGlow 22s ease-in-out infinite alternate;will-change:transform
+}
+@keyframes homeAmbientGradient{
+  0%{background-position:0% 0%,100% 10%,0% 50%}
+  100%{background-position:18% 12%,78% 34%,100% 50%}
+}
+@keyframes homeAmbientGlow{
+  0%{transform:translate3d(0,0,0) scale(.92)}
+  100%{transform:translate3d(32px,48px,0) scale(1.08)}
+}
 .hero,.card{
   border:1px solid var(--line);background:linear-gradient(145deg,rgba(30,41,59,.96),rgba(15,23,42,.96));
   border-radius:22px;box-shadow:0 18px 40px rgba(0,0,0,.2)
@@ -1002,6 +1029,7 @@ body.workflow-modal-open{overflow:hidden}
   .workflow-zoom-controls .workflow-close{min-width:42px;width:42px}
 }
 @media(prefers-reduced-motion:reduce){
+  #intel::before,#intel::after{animation:none!important;will-change:auto}
   .workflow-preview,.workflow-preview img,.workflow-modal,.workflow-modal-dialog,.workflow-modal-stage img,.workflow-zoom-controls button{
     animation:none!important;transition:none!important
   }
