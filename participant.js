@@ -18,6 +18,8 @@ const SUPER_BONUS_PLAYED_EVENTS_KEY = "bridge-super-bonus-played-events";
 let superBonusSoundEnabled = localStorage.getItem(SUPER_BONUS_SOUND_ENABLED_KEY) !== "false";
 let superBonusAudioContext = null;
 const pendingSuperBonusEvents = new Set();
+let superBonusBellPlaying = false;
+let superBonusBellPlaybackTimer = null;
 
 function readPlayedSuperBonusEvents() {
   try {
@@ -67,23 +69,53 @@ function playSuperBonusWinningBell() {
     const context = getSuperBonusAudioContext();
     if (!context || context.state !== "running") return false;
 
-    const start = context.currentTime + 0.015;
+    const start = context.currentTime + 0.02;
+    const duration = 3.65;
     const master = context.createGain();
-    master.gain.setValueAtTime(0.0001, start);
-    master.gain.exponentialRampToValueAtTime(0.22, start + 0.012);
-    master.gain.exponentialRampToValueAtTime(0.0001, start + 1.35);
-    master.connect(context.destination);
+    const compressor = context.createDynamicsCompressor();
+    master.gain.setValueAtTime(0.72, start);
+    master.gain.setValueAtTime(0.72, start + 2.55);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    compressor.threshold.value = -16;
+    compressor.knee.value = 10;
+    compressor.ratio.value = 5;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.16;
+    master.connect(compressor).connect(context.destination);
 
-    [659.25, 830.61, 987.77, 1318.51].forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const voiceGain = context.createGain();
-      oscillator.type = index === 3 ? "sine" : "triangle";
-      oscillator.frequency.setValueAtTime(frequency, start);
-      voiceGain.gain.setValueAtTime(index === 3 ? 0.18 : 0.32, start);
-      voiceGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.9 + index * 0.1);
-      oscillator.connect(voiceGain).connect(master);
-      oscillator.start(start + index * 0.055);
-      oscillator.stop(start + 1.4);
+    // An original rapid lottery-bell roll: bright inharmonic partials create
+    // the metallic "karan-karan-karan" character without using sampled audio.
+    const strikeTimes = [
+      0, .105, .215, .34, .47, .585, .72,
+      .91, 1.015, 1.13, 1.255, 1.39, 1.51, 1.65,
+      1.84, 1.945, 2.06, 2.185, 2.32, 2.44, 2.58
+    ];
+    const fundamentals = [1174.66, 1318.51, 1396.91];
+    const partials = [
+      { ratio:1, gain:.19, decay:.62, type:"triangle" },
+      { ratio:2.03, gain:.09, decay:.48, type:"sine" },
+      { ratio:2.71, gain:.055, decay:.36, type:"sine" },
+      { ratio:3.89, gain:.032, decay:.28, type:"sine" }
+    ];
+
+    strikeTimes.forEach((offset, strikeIndex) => {
+      const strikeStart = start + offset;
+      const baseFrequency = fundamentals[strikeIndex % fundamentals.length];
+
+      partials.forEach((partial, partialIndex) => {
+        const oscillator = context.createOscillator();
+        const voiceGain = context.createGain();
+        const brightness = 1 - Math.min(strikeIndex / 34, .38);
+        oscillator.type = partial.type;
+        oscillator.frequency.setValueAtTime(baseFrequency * partial.ratio, strikeStart);
+        oscillator.detune.setValueAtTime((partialIndex - 1.5) * 2.5, strikeStart);
+        voiceGain.gain.setValueAtTime(0.0001, strikeStart);
+        voiceGain.gain.exponentialRampToValueAtTime(partial.gain * brightness, strikeStart + .004);
+        voiceGain.gain.exponentialRampToValueAtTime(0.0001, strikeStart + partial.decay);
+        oscillator.connect(voiceGain).connect(master);
+        oscillator.start(strikeStart);
+        oscillator.stop(strikeStart + partial.decay + .03);
+      });
     });
     return true;
   } catch {
@@ -101,13 +133,19 @@ function flushPendingSuperBonusEvents() {
     return;
   }
 
-  if (superBonusAudioContext?.state !== "running") return;
-  pendingSuperBonusEvents.forEach(eventId => {
-    if (playSuperBonusWinningBell()) {
-      rememberSuperBonusEvent(eventId);
-      pendingSuperBonusEvents.delete(eventId);
-    }
-  });
+  if (superBonusAudioContext?.state !== "running" || superBonusBellPlaying) return;
+
+  const eventId = pendingSuperBonusEvents.values().next().value;
+  if (playSuperBonusWinningBell()) {
+    superBonusBellPlaying = true;
+    rememberSuperBonusEvent(eventId);
+    pendingSuperBonusEvents.delete(eventId);
+    clearTimeout(superBonusBellPlaybackTimer);
+    superBonusBellPlaybackTimer = setTimeout(() => {
+      superBonusBellPlaying = false;
+      flushPendingSuperBonusEvents();
+    }, 3800);
+  }
 }
 
 function queueSuperBonusWinningBell(eventId) {

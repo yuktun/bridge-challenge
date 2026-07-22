@@ -208,3 +208,9 @@ Version 1.7.37
 - Each Super Bonus award now carries a unique event ID and plays once per participant device.
 - Played event IDs are remembered locally to prevent replay after refresh, reconnect or duplicate Firebase updates.
 - Audio is unlocked on the participant's first interaction, with a remembered sound on/off control.
+
+
+Version 1.7.38
+- Updated the original Super Bonus sound to a bright, rapid Japanese lottery-style metallic bell roll.
+- The sound runs for approximately 3.6 seconds with natural ringing and a smooth fade-out.
+- Near-simultaneous Super Bonus events are queued so their sounds never overlap.
