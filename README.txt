@@ -201,3 +201,10 @@ Version 1.7.20
 Version 1.7.21
 - Team Spirit now unlocks when the first checklist item is checked.
 - The existing first-three-items, five-second Bonus Game unlock remains unchanged.
+
+
+Version 1.7.37
+- Added an original short winning-bell sound for new Super Bonus award announcements only.
+- Each Super Bonus award now carries a unique event ID and plays once per participant device.
+- Played event IDs are remembered locally to prevent replay after refresh, reconnect or duplicate Firebase updates.
+- Audio is unlocked on the participant's first interaction, with a remembered sound on/off control.
