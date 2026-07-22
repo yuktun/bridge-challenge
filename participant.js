@@ -13,6 +13,135 @@ let serverOffset = 0;
 let state = {};
 let renderTicker = null;
 
+const SUPER_BONUS_SOUND_ENABLED_KEY = "bridge-super-bonus-sound-enabled";
+const SUPER_BONUS_PLAYED_EVENTS_KEY = "bridge-super-bonus-played-events";
+let superBonusSoundEnabled = localStorage.getItem(SUPER_BONUS_SOUND_ENABLED_KEY) !== "false";
+let superBonusAudioContext = null;
+const pendingSuperBonusEvents = new Set();
+
+function readPlayedSuperBonusEvents() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SUPER_BONUS_PLAYED_EVENTS_KEY) || "[]");
+    return new Set(Array.isArray(saved) ? saved.filter(Boolean) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+const playedSuperBonusEvents = readPlayedSuperBonusEvents();
+
+function rememberSuperBonusEvent(eventId) {
+  if (!eventId || playedSuperBonusEvents.has(eventId)) return false;
+  playedSuperBonusEvents.add(eventId);
+  const recentEvents = [...playedSuperBonusEvents].slice(-100);
+  try { localStorage.setItem(SUPER_BONUS_PLAYED_EVENTS_KEY, JSON.stringify(recentEvents)); } catch {}
+  return true;
+}
+
+function getSuperBonusAudioContext() {
+  if (!superBonusAudioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) superBonusAudioContext = new AudioContextClass();
+  }
+  return superBonusAudioContext;
+}
+
+async function unlockSuperBonusAudio() {
+  try {
+    const context = getSuperBonusAudioContext();
+    if (context?.state === "suspended") await context.resume();
+    if (context?.state === "running") {
+      const silentSource = context.createOscillator();
+      const silentGain = context.createGain();
+      silentGain.gain.value = 0.00001;
+      silentSource.connect(silentGain).connect(context.destination);
+      silentSource.start();
+      silentSource.stop(context.currentTime + 0.01);
+      flushPendingSuperBonusEvents();
+    }
+  } catch {}
+}
+
+function playSuperBonusWinningBell() {
+  try {
+    const context = getSuperBonusAudioContext();
+    if (!context || context.state !== "running") return false;
+
+    const start = context.currentTime + 0.015;
+    const master = context.createGain();
+    master.gain.setValueAtTime(0.0001, start);
+    master.gain.exponentialRampToValueAtTime(0.22, start + 0.012);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 1.35);
+    master.connect(context.destination);
+
+    [659.25, 830.61, 987.77, 1318.51].forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      const voiceGain = context.createGain();
+      oscillator.type = index === 3 ? "sine" : "triangle";
+      oscillator.frequency.setValueAtTime(frequency, start);
+      voiceGain.gain.setValueAtTime(index === 3 ? 0.18 : 0.32, start);
+      voiceGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.9 + index * 0.1);
+      oscillator.connect(voiceGain).connect(master);
+      oscillator.start(start + index * 0.055);
+      oscillator.stop(start + 1.4);
+    });
+    return true;
+  } catch {
+    // The announcement remains visible if a browser blocks or lacks audio support.
+    return false;
+  }
+}
+
+function flushPendingSuperBonusEvents() {
+  if (!pendingSuperBonusEvents.size) return;
+
+  if (!superBonusSoundEnabled) {
+    pendingSuperBonusEvents.forEach(rememberSuperBonusEvent);
+    pendingSuperBonusEvents.clear();
+    return;
+  }
+
+  if (superBonusAudioContext?.state !== "running") return;
+  pendingSuperBonusEvents.forEach(eventId => {
+    if (playSuperBonusWinningBell()) {
+      rememberSuperBonusEvent(eventId);
+      pendingSuperBonusEvents.delete(eventId);
+    }
+  });
+}
+
+function queueSuperBonusWinningBell(eventId) {
+  if (!eventId || playedSuperBonusEvents.has(eventId) || pendingSuperBonusEvents.has(eventId)) return;
+  if (!superBonusSoundEnabled) {
+    rememberSuperBonusEvent(eventId);
+    return;
+  }
+
+  pendingSuperBonusEvents.add(eventId);
+  unlockSuperBonusAudio();
+}
+
+function updateSuperBonusSoundToggle() {
+  const toggle = el("superBonusSoundToggle");
+  if (!toggle) return;
+  toggle.textContent = superBonusSoundEnabled ? "🔊" : "🔇";
+  toggle.setAttribute("aria-pressed", String(superBonusSoundEnabled));
+  toggle.setAttribute("aria-label", `Turn Super Bonus sound ${superBonusSoundEnabled ? "off" : "on"}`);
+  toggle.title = `Super Bonus sound: ${superBonusSoundEnabled ? "on" : "off"}`;
+}
+
+el("superBonusSoundToggle")?.addEventListener("click", async () => {
+  superBonusSoundEnabled = !superBonusSoundEnabled;
+  try { localStorage.setItem(SUPER_BONUS_SOUND_ENABLED_KEY, String(superBonusSoundEnabled)); } catch {}
+  updateSuperBonusSoundToggle();
+  if (superBonusSoundEnabled) await unlockSuperBonusAudio();
+  else flushPendingSuperBonusEvents();
+});
+
+document.addEventListener("pointerdown", unlockSuperBonusAudio, { once:true, passive:true });
+document.addEventListener("keydown", unlockSuperBonusAudio, { once:true });
+updateSuperBonusSoundToggle();
+
 const phases = [
   { name:"Strategy & Planning", duration:300, desc:"Plan your approach. Do not touch any materials yet.", cls:"" },
   { name:"Bridge Construction", duration:900, desc:"Build using only the provided paper and masking tape.", cls:"blue" },
@@ -625,7 +754,15 @@ function renderSuperBonusAnnouncement(data = {}) {
 }
 
 onValue(bridgeRef("superBonusAnnouncement"), snapshot => {
-  renderSuperBonusAnnouncement(snapshot.val() || {});
+  const announcement = snapshot.val() || {};
+  renderSuperBonusAnnouncement(announcement);
+
+  Object.values(announcement.teams || {})
+    .filter(item => item?.type === "superBonus" && item?.eventId)
+    .sort((a, b) => Number(a.announcedAt || 0) - Number(b.announcedAt || 0))
+    .forEach(item => {
+      queueSuperBonusWinningBell(item.eventId);
+    });
 });
 
 

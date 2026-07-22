@@ -838,6 +838,8 @@ async function checkForSuperBonusTeams() {
       teamKey;
 
     const announcedRef = bridgeRef(`superBonus/announcedTeams/${teamKey}`);
+    const announcedAt = Date.now();
+    const eventId = `super-bonus-${teamKey}-${announcedAt}-${Math.random().toString(36).slice(2, 10)}`;
 
     try {
       let firstAnnouncement = false;
@@ -846,7 +848,8 @@ async function checkForSuperBonusTeams() {
         firstAnnouncement = true;
         return {
           teamName,
-          announcedAt: Date.now()
+          announcedAt,
+          eventId
         };
       });
 
@@ -854,7 +857,9 @@ async function checkForSuperBonusTeams() {
         await update(bridgeRef("superBonusAnnouncement"), {
           [`teams/${teamKey}`]: {
             teamName,
-            announcedAt: Date.now()
+            announcedAt,
+            eventId,
+            type: "superBonus"
           },
           updatedAt: serverTimestamp()
         });
