@@ -989,7 +989,14 @@ function fitWorkflowDiagram() {
   if (!Number.isFinite(imageRatio) || imageRatio <= 0) return;
   workflowModalStage.style.height = "";
   const stageWidth = workflowModalStage.clientWidth;
-  const reservedHeight = window.matchMedia("(max-width: 640px)").matches ? 154 : 180;
+  const isMobileViewer = window.matchMedia("(max-width: 640px)").matches;
+  if (isMobileViewer) {
+    workflowModalStage.style.height = `${window.innerHeight}px`;
+    workflowFitScale = 1;
+    applyWorkflowZoom(1, true);
+    return;
+  }
+  const reservedHeight = 180;
   const availableHeight = Math.min(760, window.innerHeight * 0.7, Math.max(180, window.innerHeight - reservedHeight));
   const fittedHeight = Math.min(stageWidth / imageRatio, availableHeight);
   workflowModalStage.style.height = `${Math.round(fittedHeight)}px`;
