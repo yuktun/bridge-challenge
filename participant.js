@@ -949,6 +949,10 @@ const workflowPointers = new Map();
 let workflowPinchStartDistance = 0;
 let workflowPinchStartZoom = 1;
 let workflowFitScale = 1;
+let workflowPinchStartScrollLeft = 0;
+let workflowPinchStartScrollTop = 0;
+let workflowPinchStartMidX = 0;
+let workflowPinchStartMidY = 0;
 
 function currentWorkflowLanguage() {
   return window.bridgeI18n?.getLanguage?.() || document.documentElement.lang || "en";
@@ -995,6 +999,9 @@ function fitWorkflowDiagram() {
 
 function openWorkflowModal() {
   updateWorkflowLanguage();
+  workflowPointers.clear();
+  workflowDragging = false;
+  workflowPinchStartDistance = 0;
   workflowPageScrollY = window.scrollY;
   workflowModal?.classList.remove("hidden");
   document.body.classList.add("workflow-modal-open");
@@ -1002,6 +1009,10 @@ function openWorkflowModal() {
 }
 
 function closeWorkflowModal() {
+  workflowPointers.clear();
+  workflowDragging = false;
+  workflowPinchStartDistance = 0;
+  workflowModalStage?.classList.remove("dragging", "pinching");
   workflowModal?.classList.add("hidden");
   document.body.classList.remove("workflow-modal-open");
   requestAnimationFrame(() => {
@@ -1025,17 +1036,22 @@ window.addEventListener("keydown", event => {
   if (event.key === "Escape" && !workflowModal?.classList.contains("hidden")) closeWorkflowModal();
 });
 workflowModalStage?.addEventListener("wheel", event => {
-  if (!event.ctrlKey && !event.metaKey) return;
   event.preventDefault();
-  applyWorkflowZoom(workflowZoom + (event.deltaY < 0 ? 0.15 : -0.15));
+  applyWorkflowZoom(workflowZoom + (event.deltaY < 0 ? 0.12 : -0.12));
 }, { passive:false });
 workflowModalStage?.addEventListener("pointerdown", event => {
+  event.preventDefault();
   workflowPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
   workflowModalStage.setPointerCapture?.(event.pointerId);
   if (workflowPointers.size === 2) {
     const [first, second] = [...workflowPointers.values()];
+    const stageRect = workflowModalStage.getBoundingClientRect();
     workflowPinchStartDistance = Math.hypot(second.x - first.x, second.y - first.y);
     workflowPinchStartZoom = workflowZoom;
+    workflowPinchStartScrollLeft = workflowModalStage.scrollLeft;
+    workflowPinchStartScrollTop = workflowModalStage.scrollTop;
+    workflowPinchStartMidX = (first.x + second.x) / 2 - stageRect.left;
+    workflowPinchStartMidY = (first.y + second.y) / 2 - stageRect.top;
     workflowDragging = false;
     workflowModalStage.classList.add("pinching");
     workflowModalStage.classList.remove("dragging");
@@ -1056,12 +1072,20 @@ workflowModalStage?.addEventListener("pointermove", event => {
     const [first, second] = [...workflowPointers.values()];
     const distance = Math.hypot(second.x - first.x, second.y - first.y);
     if (workflowPinchStartDistance > 0) {
-      applyWorkflowZoom(workflowPinchStartZoom * (distance / workflowPinchStartDistance));
+      const nextZoom = Math.min(4, Math.max(0.5, workflowPinchStartZoom * (distance / workflowPinchStartDistance)));
+      const zoomRatio = nextZoom / workflowPinchStartZoom;
+      const stageRect = workflowModalStage.getBoundingClientRect();
+      const currentMidX = (first.x + second.x) / 2 - stageRect.left;
+      const currentMidY = (first.y + second.y) / 2 - stageRect.top;
+      applyWorkflowZoom(nextZoom);
+      workflowModalStage.scrollLeft = (workflowPinchStartScrollLeft + workflowPinchStartMidX) * zoomRatio - currentMidX;
+      workflowModalStage.scrollTop = (workflowPinchStartScrollTop + workflowPinchStartMidY) * zoomRatio - currentMidY;
     }
     event.preventDefault();
     return;
   }
   if (!workflowDragging) return;
+  event.preventDefault();
   workflowModalStage.scrollLeft = workflowScrollStartLeft - (event.clientX - workflowDragStartX);
   workflowModalStage.scrollTop = workflowScrollStartTop - (event.clientY - workflowDragStartY);
 });
@@ -1071,8 +1095,18 @@ function stopWorkflowDrag(event) {
     workflowPinchStartDistance = 0;
     workflowModalStage?.classList.remove("pinching");
   }
-  workflowDragging = false;
-  workflowModalStage?.classList.remove("dragging");
+  if (workflowPointers.size === 1 && workflowZoom > 1 && workflowModalStage) {
+    const remaining = [...workflowPointers.values()][0];
+    workflowDragging = true;
+    workflowDragStartX = remaining.x;
+    workflowDragStartY = remaining.y;
+    workflowScrollStartLeft = workflowModalStage.scrollLeft;
+    workflowScrollStartTop = workflowModalStage.scrollTop;
+    workflowModalStage.classList.add("dragging");
+  } else {
+    workflowDragging = false;
+    workflowModalStage?.classList.remove("dragging");
+  }
 }
 workflowModalStage?.addEventListener("pointerup", stopWorkflowDrag);
 workflowModalStage?.addEventListener("pointercancel", stopWorkflowDrag);
