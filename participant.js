@@ -934,6 +934,7 @@ const workflowPreviewImage = el("workflowPreviewImage");
 const workflowModal = el("workflowModal");
 const workflowModalImage = el("workflowModalImage");
 const workflowModalStage = el("workflowModalStage");
+const workflowModalToolbar = el("workflowModalToolbar");
 const workflowZoomIn = el("workflowZoomIn");
 const workflowZoomOut = el("workflowZoomOut");
 const workflowZoomReset = el("workflowZoomReset");
@@ -953,6 +954,10 @@ let workflowPinchStartScrollLeft = 0;
 let workflowPinchStartScrollTop = 0;
 let workflowPinchStartMidX = 0;
 let workflowPinchStartMidY = 0;
+let workflowControlsTimer = null;
+let workflowTapStart = null;
+let workflowGestureMoved = false;
+let workflowGestureMultiTouch = false;
 
 function currentWorkflowLanguage() {
   return window.bridgeI18n?.getLanguage?.() || document.documentElement.lang || "en";
@@ -976,10 +981,45 @@ function centerWorkflowDiagram() {
   });
 }
 
+function isMobileWorkflowViewer() {
+  return window.matchMedia("(max-width: 640px)").matches;
+}
+
+function updateWorkflowImagePosition() {
+  if (!workflowModalImage || !workflowModalStage) return;
+  if (!isMobileWorkflowViewer()) {
+    workflowModalImage.style.marginTop = "";
+    return;
+  }
+  const imageRatio = workflowModalImage.naturalWidth / workflowModalImage.naturalHeight;
+  if (!Number.isFinite(imageRatio) || imageRatio <= 0) return;
+  const renderedWidth = workflowModalStage.clientWidth * workflowFitScale * workflowZoom;
+  const renderedHeight = renderedWidth / imageRatio;
+  const topOffset = Math.max(0, (workflowModalStage.clientHeight - renderedHeight) / 2);
+  workflowModalImage.style.marginTop = `${Math.round(topOffset)}px`;
+}
+
+function hideWorkflowControls() {
+  if (!isMobileWorkflowViewer()) return;
+  clearTimeout(workflowControlsTimer);
+  workflowModal?.classList.add("workflow-controls-hidden");
+  if (workflowModalToolbar) workflowModalToolbar.inert = true;
+}
+
+function showWorkflowControls(autoHide = true) {
+  clearTimeout(workflowControlsTimer);
+  workflowModal?.classList.remove("workflow-controls-hidden");
+  if (workflowModalToolbar) workflowModalToolbar.inert = false;
+  if (autoHide && isMobileWorkflowViewer()) {
+    workflowControlsTimer = setTimeout(hideWorkflowControls, 2200);
+  }
+}
+
 function applyWorkflowZoom(nextZoom, center = false) {
   workflowZoom = Math.min(4, Math.max(0.5, nextZoom));
   if (workflowModalImage) workflowModalImage.style.width = `${workflowFitScale * workflowZoom * 100}%`;
   if (workflowZoomReset) workflowZoomReset.textContent = `${Math.round(workflowZoom * 100)}%`;
+  requestAnimationFrame(updateWorkflowImagePosition);
   if (center) centerWorkflowDiagram();
 }
 
@@ -989,7 +1029,7 @@ function fitWorkflowDiagram() {
   if (!Number.isFinite(imageRatio) || imageRatio <= 0) return;
   workflowModalStage.style.height = "";
   const stageWidth = workflowModalStage.clientWidth;
-  const isMobileViewer = window.matchMedia("(max-width: 640px)").matches;
+  const isMobileViewer = isMobileWorkflowViewer();
   if (isMobileViewer) {
     workflowModalStage.style.height = `${window.innerHeight}px`;
     workflowFitScale = 1;
@@ -1012,6 +1052,7 @@ function openWorkflowModal() {
   workflowPageScrollY = window.scrollY;
   workflowModal?.classList.remove("hidden");
   document.body.classList.add("workflow-modal-open");
+  showWorkflowControls(true);
   requestAnimationFrame(fitWorkflowDiagram);
 }
 
@@ -1020,6 +1061,7 @@ function closeWorkflowModal() {
   workflowDragging = false;
   workflowPinchStartDistance = 0;
   workflowModalStage?.classList.remove("dragging", "pinching");
+  clearTimeout(workflowControlsTimer);
   workflowModal?.classList.add("hidden");
   document.body.classList.remove("workflow-modal-open");
   requestAnimationFrame(() => {
@@ -1029,9 +1071,9 @@ function closeWorkflowModal() {
 
 workflowPreview?.addEventListener("click", openWorkflowModal);
 workflowModalClose?.addEventListener("click", closeWorkflowModal);
-workflowZoomIn?.addEventListener("click", () => applyWorkflowZoom(workflowZoom + 0.25));
-workflowZoomOut?.addEventListener("click", () => applyWorkflowZoom(workflowZoom - 0.25));
-workflowZoomReset?.addEventListener("click", fitWorkflowDiagram);
+workflowZoomIn?.addEventListener("click", () => { applyWorkflowZoom(workflowZoom + 0.25); showWorkflowControls(true); });
+workflowZoomOut?.addEventListener("click", () => { applyWorkflowZoom(workflowZoom - 0.25); showWorkflowControls(true); });
+workflowZoomReset?.addEventListener("click", () => { fitWorkflowDiagram(); showWorkflowControls(true); });
 workflowModalImage?.addEventListener("load", fitWorkflowDiagram);
 window.addEventListener("resize", () => {
   if (!workflowModal?.classList.contains("hidden")) fitWorkflowDiagram();
@@ -1049,6 +1091,14 @@ workflowModalStage?.addEventListener("wheel", event => {
 workflowModalStage?.addEventListener("pointerdown", event => {
   event.preventDefault();
   workflowPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
+  if (workflowPointers.size === 1) {
+    workflowTapStart = { x:event.clientX, y:event.clientY, time:performance.now() };
+    workflowGestureMoved = false;
+    workflowGestureMultiTouch = false;
+  } else {
+    workflowGestureMultiTouch = true;
+    hideWorkflowControls();
+  }
   workflowModalStage.setPointerCapture?.(event.pointerId);
   if (workflowPointers.size === 2) {
     const [first, second] = [...workflowPointers.values()];
@@ -1074,6 +1124,10 @@ workflowModalStage?.addEventListener("pointerdown", event => {
 });
 workflowModalStage?.addEventListener("pointermove", event => {
   if (!workflowPointers.has(event.pointerId)) return;
+  if (workflowTapStart && Math.hypot(event.clientX - workflowTapStart.x, event.clientY - workflowTapStart.y) > 8) {
+    workflowGestureMoved = true;
+    hideWorkflowControls();
+  }
   workflowPointers.set(event.pointerId, { x:event.clientX, y:event.clientY });
   if (workflowPointers.size >= 2) {
     const [first, second] = [...workflowPointers.values()];
@@ -1117,5 +1171,16 @@ function stopWorkflowDrag(event) {
 }
 workflowModalStage?.addEventListener("pointerup", stopWorkflowDrag);
 workflowModalStage?.addEventListener("pointercancel", stopWorkflowDrag);
+workflowModalStage?.addEventListener("pointerup", () => {
+  if (workflowPointers.size !== 0) return;
+  const wasTap = workflowTapStart && !workflowGestureMoved && !workflowGestureMultiTouch && performance.now() - workflowTapStart.time < 350;
+  if (wasTap) {
+    if (workflowModal?.classList.contains("workflow-controls-hidden")) showWorkflowControls(true);
+    else hideWorkflowControls();
+  }
+  workflowTapStart = null;
+  workflowGestureMoved = false;
+  workflowGestureMultiTouch = false;
+});
 window.addEventListener("bridge-language-change", updateWorkflowLanguage);
 updateWorkflowLanguage();
