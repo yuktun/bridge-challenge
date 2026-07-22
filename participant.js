@@ -17,6 +17,8 @@ const SUPER_BONUS_SOUND_ENABLED_KEY = "bridge-super-bonus-sound-enabled";
 const SUPER_BONUS_PLAYED_EVENTS_KEY = "bridge-super-bonus-played-events";
 let superBonusSoundEnabled = localStorage.getItem(SUPER_BONUS_SOUND_ENABLED_KEY) !== "false";
 let superBonusAudioContext = null;
+let superBonusAudioBufferPromise = null;
+let superBonusActiveSource = null;
 const pendingSuperBonusEvents = new Set();
 let superBonusBellPlaying = false;
 let superBonusBellPlaybackTimer = null;
@@ -48,6 +50,23 @@ function getSuperBonusAudioContext() {
   return superBonusAudioContext;
 }
 
+function loadSuperBonusAudioBuffer() {
+  if (!superBonusAudioBufferPromise) {
+    const context = getSuperBonusAudioContext();
+    if (!context) return Promise.resolve(null);
+
+    const soundUrl = new URL("./super-bonus-victory-chime.mp3?v=1.0", import.meta.url);
+    superBonusAudioBufferPromise = fetch(soundUrl)
+      .then(response => {
+        if (!response.ok) throw new Error(`Unable to load Super Bonus sound (${response.status})`);
+        return response.arrayBuffer();
+      })
+      .then(audioData => context.decodeAudioData(audioData))
+      .catch(() => null);
+  }
+  return superBonusAudioBufferPromise;
+}
+
 async function unlockSuperBonusAudio() {
   try {
     const context = getSuperBonusAudioContext();
@@ -64,59 +83,25 @@ async function unlockSuperBonusAudio() {
   } catch {}
 }
 
-function playSuperBonusWinningBell() {
+async function playSuperBonusWinningBell(onEnded) {
   try {
     const context = getSuperBonusAudioContext();
     if (!context || context.state !== "running") return false;
 
-    const start = context.currentTime + 0.02;
-    const duration = 3.65;
-    const master = context.createGain();
-    const compressor = context.createDynamicsCompressor();
-    master.gain.setValueAtTime(0.72, start);
-    master.gain.setValueAtTime(0.72, start + 2.55);
-    master.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    compressor.threshold.value = -16;
-    compressor.knee.value = 10;
-    compressor.ratio.value = 5;
-    compressor.attack.value = 0.003;
-    compressor.release.value = 0.16;
-    master.connect(compressor).connect(context.destination);
+    const audioBuffer = await loadSuperBonusAudioBuffer();
+    if (!audioBuffer || context.state !== "running") return false;
 
-    // An original rapid lottery-bell roll: bright inharmonic partials create
-    // the metallic "karan-karan-karan" character without using sampled audio.
-    const strikeTimes = [
-      0, .105, .215, .34, .47, .585, .72,
-      .91, 1.015, 1.13, 1.255, 1.39, 1.51, 1.65,
-      1.84, 1.945, 2.06, 2.185, 2.32, 2.44, 2.58
-    ];
-    const fundamentals = [1174.66, 1318.51, 1396.91];
-    const partials = [
-      { ratio:1, gain:.19, decay:.62, type:"triangle" },
-      { ratio:2.03, gain:.09, decay:.48, type:"sine" },
-      { ratio:2.71, gain:.055, decay:.36, type:"sine" },
-      { ratio:3.89, gain:.032, decay:.28, type:"sine" }
-    ];
-
-    strikeTimes.forEach((offset, strikeIndex) => {
-      const strikeStart = start + offset;
-      const baseFrequency = fundamentals[strikeIndex % fundamentals.length];
-
-      partials.forEach((partial, partialIndex) => {
-        const oscillator = context.createOscillator();
-        const voiceGain = context.createGain();
-        const brightness = 1 - Math.min(strikeIndex / 34, .38);
-        oscillator.type = partial.type;
-        oscillator.frequency.setValueAtTime(baseFrequency * partial.ratio, strikeStart);
-        oscillator.detune.setValueAtTime((partialIndex - 1.5) * 2.5, strikeStart);
-        voiceGain.gain.setValueAtTime(0.0001, strikeStart);
-        voiceGain.gain.exponentialRampToValueAtTime(partial.gain * brightness, strikeStart + .004);
-        voiceGain.gain.exponentialRampToValueAtTime(0.0001, strikeStart + partial.decay);
-        oscillator.connect(voiceGain).connect(master);
-        oscillator.start(strikeStart);
-        oscillator.stop(strikeStart + partial.decay + .03);
-      });
-    });
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    source.buffer = audioBuffer;
+    gain.gain.value = 0.9;
+    source.connect(gain).connect(context.destination);
+    source.onended = () => {
+      if (superBonusActiveSource === source) superBonusActiveSource = null;
+      onEnded?.();
+    };
+    superBonusActiveSource = source;
+    source.start();
     return true;
   } catch {
     // The announcement remains visible if a browser blocks or lacks audio support.
@@ -124,7 +109,7 @@ function playSuperBonusWinningBell() {
   }
 }
 
-function flushPendingSuperBonusEvents() {
+async function flushPendingSuperBonusEvents() {
   if (!pendingSuperBonusEvents.size) return;
 
   if (!superBonusSoundEnabled) {
@@ -136,15 +121,21 @@ function flushPendingSuperBonusEvents() {
   if (superBonusAudioContext?.state !== "running" || superBonusBellPlaying) return;
 
   const eventId = pendingSuperBonusEvents.values().next().value;
-  if (playSuperBonusWinningBell()) {
-    superBonusBellPlaying = true;
+  superBonusBellPlaying = true;
+
+  const finishPlayback = () => {
+    clearTimeout(superBonusBellPlaybackTimer);
+    superBonusBellPlaying = false;
+    flushPendingSuperBonusEvents();
+  };
+
+  if (await playSuperBonusWinningBell(finishPlayback)) {
     rememberSuperBonusEvent(eventId);
     pendingSuperBonusEvents.delete(eventId);
     clearTimeout(superBonusBellPlaybackTimer);
-    superBonusBellPlaybackTimer = setTimeout(() => {
-      superBonusBellPlaying = false;
-      flushPendingSuperBonusEvents();
-    }, 3800);
+    superBonusBellPlaybackTimer = setTimeout(finishPlayback, 12000);
+  } else {
+    superBonusBellPlaying = false;
   }
 }
 
@@ -158,6 +149,8 @@ function queueSuperBonusWinningBell(eventId) {
   pendingSuperBonusEvents.add(eventId);
   unlockSuperBonusAudio();
 }
+
+loadSuperBonusAudioBuffer();
 
 function updateSuperBonusSoundToggle() {
   const toggle = el("superBonusSoundToggle");
@@ -173,7 +166,13 @@ el("superBonusSoundToggle")?.addEventListener("click", async () => {
   try { localStorage.setItem(SUPER_BONUS_SOUND_ENABLED_KEY, String(superBonusSoundEnabled)); } catch {}
   updateSuperBonusSoundToggle();
   if (superBonusSoundEnabled) await unlockSuperBonusAudio();
-  else flushPendingSuperBonusEvents();
+  else {
+    if (superBonusActiveSource) {
+      try { superBonusActiveSource.stop(); } catch {}
+      superBonusActiveSource = null;
+    }
+    flushPendingSuperBonusEvents();
+  }
 });
 
 document.addEventListener("pointerdown", unlockSuperBonusAudio, { once:true, passive:true });

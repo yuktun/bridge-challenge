@@ -214,3 +214,10 @@ Version 1.7.38
 - Updated the original Super Bonus sound to a bright, rapid Japanese lottery-style metallic bell roll.
 - The sound runs for approximately 3.6 seconds with natural ringing and a smooth fade-out.
 - Near-simultaneous Super Bonus events are queued so their sounds never overlap.
+
+
+Version 1.7.39
+- Replaced the synthesized Super Bonus bell with the approved Victory Chime audio by Scratchonix from Pixabay.
+- The full natural fade-out is preserved, and queued Super Bonus awards wait for playback to finish.
+- Source: https://pixabay.com/sound-effects/musical-victory-chime-366449/
+- License: Pixabay Content License (free use; attribution not required).
