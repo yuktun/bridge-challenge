@@ -793,7 +793,7 @@ let visualEasterPreviousFocus = null;
 
 function closeVisualEasterEgg() {
   visualEasterModal?.classList.add("hidden");
-  visualEasterModal?.classList.remove("visual-easter-visible", "coffee", "gap-warning", "team-spirit");
+  visualEasterModal?.classList.remove("visual-easter-visible", "coffee", "gap-friendly", "team-spirit");
   const cleanup = visualEasterCleanup;
   visualEasterCleanup = null;
   cleanup?.();
@@ -911,17 +911,17 @@ function triggerGapWarning() {
   missionBlueprint?.classList.add("gap-diagram-shake");
 
   openVisualEasterEgg({
-    kind: "gap-warning",
-    icon: "🚨📏🚨",
-    title: "GAP VIOLATION DETECTED 🚨",
-    copy: "Engineering enforcement has been notified.",
-    button: "Restore Safe Distance",
+    kind: "gap-friendly",
+    icon: "☕ ↔️ ☕",
+    title: "THE CANS NEED SOME SPACE ☕",
+    copy: "They are getting a little too close.",
+    button: "Give Them Space",
     onClose: resetGapWarning
   });
 
   gapPopupTimer = setTimeout(() => {
-    if (!visualEasterModal?.classList.contains("gap-warning")) return;
-    visualEasterCopy.textContent = "Just kidding. No engineers are coming.\nPlease keep the cans at least 30 cm apart.";
+    if (!visualEasterModal?.classList.contains("gap-friendly")) return;
+    visualEasterCopy.textContent = "A little breathing room, please!\nKeep the coffee cans at least 30 cm apart.";
   }, 1000);
 }
 

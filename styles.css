@@ -761,10 +761,10 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 .mission-can-right.gap-can-inward{transform:translateX(-18px)}
 .mission-can.gap-can-inward{transition:transform .45s cubic-bezier(.2,.85,.2,1)}
 .gap-violation-active{animation:gapWarningPulse .26s ease-in-out infinite alternate}
-.gap-violation-active line{stroke:#ef4444!important;stroke-width:4!important}
-.gap-violation-active rect{stroke:#ef4444!important;fill:#3f1018!important}
-.gap-violation-active text{fill:#fecaca!important}
-@keyframes gapWarningPulse{to{filter:drop-shadow(0 0 12px rgba(239,68,68,.95))}}
+.gap-violation-active line{stroke:#34d399!important;stroke-width:4!important}
+.gap-violation-active rect{stroke:#34d399!important;fill:#082f24!important}
+.gap-violation-active text{fill:#a7f3d0!important}
+@keyframes gapWarningPulse{to{filter:drop-shadow(0 0 12px rgba(52,211,153,.9))}}
 .gap-diagram-shake{animation:gapDiagramShake .12s linear 8}
 @keyframes gapDiagramShake{
   0%,100%{transform:translateX(0)}
@@ -796,8 +796,8 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 }
 .visual-easter-overlay.coffee .visual-easter-modal{border-color:rgba(245,158,11,.65);background:radial-gradient(circle at 50% 0,rgba(245,158,11,.22),transparent 42%),linear-gradient(145deg,#261d13,#0f172a)}
 .visual-easter-overlay.coffee button{background:linear-gradient(90deg,#d97706,#92400e)}
-.visual-easter-overlay.gap-warning .visual-easter-modal{border-color:rgba(248,113,113,.7);background:radial-gradient(circle at 50% 0,rgba(239,68,68,.25),transparent 42%),linear-gradient(145deg,#28141a,#0f172a)}
-.visual-easter-overlay.gap-warning button{background:linear-gradient(90deg,#ef4444,#ea580c)}
+.visual-easter-overlay.gap-friendly .visual-easter-modal{border-color:rgba(52,211,153,.72);background:radial-gradient(circle at 50% 0,rgba(16,185,129,.25),transparent 44%),linear-gradient(145deg,#0b2a24,#0f172a)}
+.visual-easter-overlay.gap-friendly button{background:linear-gradient(90deg,#10b981,#059669)}
 .visual-easter-overlay.team-spirit .visual-easter-modal{border-color:rgba(251,146,60,.7);background:radial-gradient(circle at 50% 0,rgba(249,115,22,.28),transparent 44%),linear-gradient(145deg,#29170f,#0f172a)}
 .visual-easter-overlay.team-spirit button{background:linear-gradient(90deg,#f97316,#db2777)}
 

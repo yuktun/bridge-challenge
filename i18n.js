@@ -83,7 +83,7 @@ const translations = {
   "15 A4 sheets": "15 張 A4 紙",
   "60 cm masking tape": "60 cm 紙膠帶",
   "2 coffee cans": "2 個咖啡罐",
-  "No other supports": "不可使用其他支撐物",
+  "No personal items may be used as supports": "不可使用個人物品作為支撐物",
   "5m planning": "5 分鐘規劃",
   "15m construction": "15 分鐘建造",
   "5m judging": "5 分鐘評審",
@@ -114,7 +114,7 @@ const translations = {
   "Waiting for MC": "等待 MC",
   "Build using only the provided paper and masking tape.": "只可使用指定的紙張及紙膠帶建造。",
   "Stop building and prepare for judging and the load test.": "停止建造，準備接受評審及承重測試。",
-  "🔔 This timer is centrally controlled by the MC. Keep this page open to receive live phase and announcement updates.": "🔔 此計時器由 MC 統一控制。請保持此頁面開啟，以接收即時階段及公告更新。",
+  "🔔 This timer is centrally controlled by the MC. Use it as a reference while you continue exploring the other tabs.": "🔔 此計時器由 MC 統一控制。你可將它作為參考，並繼續瀏覽其他分頁。",
   "Unlock Three Design Hints": "解鎖三個設計提示",
   "Answer one multiple-choice question correctly to reveal each optional structural idea.": "每答對一條選擇題，即可解鎖一個可選的結構設計概念。",
   "Suggestions only:": "只供參考：",
@@ -197,10 +197,10 @@ const translations = {
   "Coffee Can Disturbance Detected ☕": "偵測到咖啡罐受到騷擾 ☕",
   "Please stop testing the coffee before testing the bridge.\nThe can has officially filed a complaint.": "請停止測試咖啡，並先測試紙橋。\n咖啡罐已正式提出投訴。",
   "Let the Can Rest": "讓咖啡罐休息",
-  "GAP VIOLATION DETECTED 🚨": "偵測到距離違規 🚨",
-  "Engineering enforcement has been notified.": "已通知工程執法部門。",
-  "Restore Safe Distance": "恢復安全距離",
-  "Just kidding. No engineers are coming.\nPlease keep the cans at least 30 cm apart.": "只是開玩笑，沒有工程師會來。\n請保持兩個咖啡罐至少相距 30 cm。"
+  "THE CANS NEED SOME SPACE ☕": "咖啡罐想要多一點空間 ☕",
+  "They are getting a little too close.": "它們靠得有點太近了。",
+  "Give Them Space": "給它們一點空間",
+  "A little breathing room, please!\nKeep the coffee cans at least 30 cm apart.": "請給它們一點呼吸空間！\n保持兩個咖啡罐至少相距 30 cm。"
 };
 
 const normalizedTranslations = Object.fromEntries(
