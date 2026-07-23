@@ -1,4 +1,8 @@
 const translations = {
+  "Score Submission": "分數提交",
+  "Your score will be submitted automatically.": "你的分數將會自動提交。",
+  "Submitting score automatically…": "正在自動提交分數⋯",
+  "Retry Submit": "重新提交",
   "🗺️ Game Flow": "🗺️ 遊戲流程圖",
   "Tap to enlarge and zoom": "點按放大及縮放",
   "Open game flow diagram": "開啟遊戲流程圖",

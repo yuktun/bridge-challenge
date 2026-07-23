@@ -156,19 +156,16 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 max-w-xs mx-auto space-y-3 shadow-inner">
                         <p id="selectedTeamLabel" class="text-[10px] text-amber-400 font-bold"></p>
                         <h3 class="text-xs font-bold text-slate-300 flex items-center justify-center gap-1.5">
-                            <i class="fa-solid fa-paper-plane text-amber-500"></i> Submit to Event Leaderboard
+                            <i class="fa-solid fa-paper-plane text-amber-500"></i> Score Submission
                         </h3>
-                        <button id="submitScoreBtn" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition duration-150">Submit</button>
-                        <p id="submitStatus" class="text-[10px] text-slate-500"></p>
+                        <button id="submitScoreBtn" class="hidden w-full bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition duration-150">Retry Submit</button>
+                        <p id="submitStatus" class="text-[10px] text-slate-400">Your score will be submitted automatically.</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
                     <button id="retryGameBtn" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-orange-500/15 transition-all active:scale-95 text-xs uppercase tracking-wider">
                         Play Again <i class="fa-solid fa-rotate-right ml-1"></i>
-                    </button>
-                    <button id="openLeaderboardFromGameOver" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold py-3.5 px-4 rounded-xl transition-all active:scale-95 text-xs uppercase tracking-wider">
-                        Leaderboard <i class="fa-solid fa-trophy ml-1 text-amber-500"></i>
                     </button>
                 </div>
             </div>
@@ -418,10 +415,12 @@
             const retryRewardMessage = document.getElementById('rewardMessage');
 
             retrySubmitButton.disabled = false;
-            retrySubmitButton.textContent = 'Submit';
+            retrySubmitButton.textContent = 'Retry Submit';
+            retrySubmitButton.classList.add('hidden');
             retrySubmitButton.classList.remove('opacity-50', 'pointer-events-none');
-            retrySubmitStatus.textContent = '';
+            retrySubmitStatus.textContent = 'Your score will be submitted automatically.';
             retryRewardMessage.className = 'hidden max-w-xs mx-auto rounded-xl border p-4 text-left';
+            window.resetBonusScoreSubmission?.();
 
             // Recalculate canvas size for iPhone orientation and dynamic browser bars.
             resizeCanvas();
@@ -762,6 +761,7 @@
             // Render/slide up the Game Over Menu overlay
             UI.gameOver.classList.remove('translate-y-full', 'opacity-0');
             UI.gameOver.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => window.autoSubmitBonusScore?.(), 0);
         }
     </script>
 
@@ -1072,7 +1072,6 @@ async function initializeEventGame() {
 const leaderboardOverlay = document.getElementById("leaderboardOverlay");
 const gameOverScreen = document.getElementById("gameOverScreen");
 const openLeaderboardButton = document.getElementById("leaderboardBtn") || document.getElementById("openLeaderboardBtn");
-const openLeaderboardFromGameOver = document.getElementById("openLeaderboardFromGameOver");
 const closeLeaderboardButton = document.getElementById("closeLeaderboardBtn");
 
 window.addEventListener("bridge-language-change", () => {
@@ -1096,12 +1095,6 @@ function closeLeaderboard() {
 window.showLeaderboard = openLeaderboard;
 
 openLeaderboardButton?.addEventListener("click", event => {
-  event.preventDefault();
-  event.stopPropagation();
-  openLeaderboard();
-});
-
-openLeaderboardFromGameOver?.addEventListener("click", event => {
   event.preventDefault();
   event.stopPropagation();
   openLeaderboard();
@@ -1241,8 +1234,17 @@ function reconcileLastScore() {
   if (lastScoreContext) evaluateTeamReward(lastScoreContext);
 }
 
-submitScoreBtn.addEventListener("click", async event => {
-  event.preventDefault();
+let scoreSubmissionRunning = false;
+let scoreSubmittedForRound = false;
+
+window.resetBonusScoreSubmission = () => {
+  scoreSubmissionRunning = false;
+  scoreSubmittedForRound = false;
+};
+
+async function submitFinalScore(event) {
+  event?.preventDefault();
+  if (scoreSubmissionRunning || scoreSubmittedForRound) return;
 
   const playerName = playerNameInput.value.trim();
   const teamIndex = Number(teamSelect.value);
@@ -1263,7 +1265,11 @@ submitScoreBtn.addEventListener("click", async event => {
   const teamKey = teamKeyFromIndex(teamIndex);
   const teamName = currentTeamNames[teamIndex];
 
+  scoreSubmissionRunning = true;
   submitScoreBtn.disabled = true;
+  submitScoreBtn.classList.add("hidden");
+  submitStatus.textContent = "Submitting score automatically…";
+  submitStatus.className = "text-[10px] text-amber-300";
   submitScoreBtn.textContent = "Saving…";
 
   try {
@@ -1282,15 +1288,21 @@ submitScoreBtn.addEventListener("click", async event => {
     submitStatus.textContent = "Score saved to the live leaderboard.";
     submitStatus.className = "text-[10px] text-emerald-400";
     submitScoreBtn.textContent = "Saved ✓";
-    setTimeout(openLeaderboard, 500);
+    scoreSubmittedForRound = true;
   } catch (error) {
     console.error(error);
     submitStatus.textContent = error?.message || "Could not save the score.";
     submitStatus.className = "text-[10px] text-rose-400";
     submitScoreBtn.disabled = false;
-    submitScoreBtn.textContent = "Submit";
+    submitScoreBtn.textContent = "Retry Submit";
+    submitScoreBtn.classList.remove("hidden");
+  } finally {
+    scoreSubmissionRunning = false;
   }
-});
+}
+
+window.autoSubmitBonusScore = submitFinalScore;
+submitScoreBtn.addEventListener("click", submitFinalScore);
 
 signInAnonymously(firebaseAuth).then(initializeEventGame).catch(error => {
   document.getElementById("teamSelectStatus").textContent = error?.message || "Firebase sign-in failed.";
