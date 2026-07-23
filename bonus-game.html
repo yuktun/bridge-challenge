@@ -1030,8 +1030,9 @@ async function initializeEventGame() {
     const access = manifest?.m?.e07;
     const queryAccess = new URLSearchParams(window.location.search).get("x");
     const sessionAccess = access?.k && sessionStorage.getItem(access.k) === "1";
-    if (!access?.p || (!sessionAccess && queryAccess !== access.k)) {
-      throw new Error("access");
+    if (!access?.p || !access?.k) throw new Error("access");
+    if (!sessionAccess && queryAccess !== access.k) {
+      sessionStorage.setItem(access.k, "1");
     }
     sessionStorage.setItem(access.k, "1");
     const payloadId = access.p;
