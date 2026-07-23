@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+import { getDatabase, ref, onValue, get, runTransaction } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 import { firebaseConfig, BRIDGE_PATH, DEFAULT_TEAM_COUNT, makeTeamNames } from "./config.js";
 
 const app = initializeApp(firebaseConfig);
@@ -8,6 +8,34 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const el = id => document.getElementById(id);
 const bridgeRef = path => ref(db, `${BRIDGE_PATH}/${path}`);
+const sessionPayloads = new Map();
+
+async function loadEventPayload(id) {
+  if (sessionPayloads.has(id)) return sessionPayloads.get(id);
+  try {
+    if (!auth.currentUser) await signInAnonymously(auth);
+    const enabled = (await get(ref(db, "config/hiddenContentEnabled"))).val() === true;
+    if (!enabled) return null;
+    const value = (await get(ref(db, `privatePayloads/${id}`))).val();
+    if (!value || typeof value !== "object") return null;
+    sessionPayloads.set(id, value);
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+function payloadText(value) {
+  if (!value || typeof value !== "object") return String(value || "");
+  return String(value[window.bridgeI18n?.language === "zh-HK" ? "zh" : "en"] || value.en || "");
+}
+
+function payloadTemplate(value, replacements = {}) {
+  return Object.entries(replacements).reduce(
+    (text, [key, replacement]) => text.replaceAll(`{${key}}`, replacement),
+    payloadText(value)
+  );
+}
 
 let serverOffset = 0;
 let state = {};
@@ -287,16 +315,31 @@ function updateChecklistProgress() {
   const checkedCount = checks.filter(item => item.checked).length;
   el("checkProgress").style.width = `${checkedCount / checks.length * 100}%`;
 
-  // The secret game now unlocks when the first three checklist items are complete.
   const firstThreeComplete = checks.slice(0, 3).every(item => item.checked);
   const firstChecklistItemComplete = Boolean(checks[0]?.checked);
   const reveal = el("bonusGameReveal");
-  teamSpiritControl?.classList.toggle("hidden", !firstChecklistItemComplete);
+  if (firstChecklistItemComplete) {
+    loadEventPayload("p05").then(payload => {
+      if (!payload || !checks[0]?.checked) return;
+      teamSpiritButton.textContent = payloadText(payload.readyLabel);
+      teamSpiritControl?.classList.remove("hidden");
+    });
+  } else {
+    teamSpiritControl?.classList.add("hidden");
+  }
 
   if (firstThreeComplete && !bonusAlreadyRevealed && !bonusRevealTimer) {
-    bonusRevealTimer = setTimeout(() => {
+    bonusRevealTimer = setTimeout(async () => {
       bonusAlreadyRevealed = true;
       bonusRevealTimer = null;
+      const payload = await loadEventPayload("p07");
+      if (!payload) return;
+      reveal.querySelector(".bonus-confetti").textContent = payload.revealIcon || "";
+      reveal.querySelector(".bonus-label").textContent = payloadText(payload.revealLabel);
+      reveal.querySelector("h3").textContent = payloadText(payload.revealTitle);
+      const gameLink = reveal.querySelector(".bonus-game-button");
+      gameLink.textContent = payloadText(payload.revealButton);
+      gameLink.addEventListener("click", () => sessionStorage.setItem("bridge-access-p07", "1"), { once:true });
       reveal.classList.remove("hidden");
       reveal.classList.add("bonus-reveal-active");
       reveal.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -345,26 +388,28 @@ function launchTeamSpiritEffects() {
   teamSpiritEffectTimer = setTimeout(clearTeamSpiritEffects, 3000);
 }
 
-function activateTeamSpirit() {
+async function activateTeamSpirit() {
   if (!teamSpiritButton || teamSpiritButton.disabled) return;
+  const payload = await loadEventPayload("p05");
+  if (!payload) return;
 
   launchTeamSpiritEffects();
-  openVisualEasterEgg({
+  openMomentPanelEgg({
     kind: "team-spirit",
-    icon: "🔥🎉🔥",
-    title: "TEAM SPIRIT ACTIVATED! 🔥",
-    copy: "Communication +10\nConfidence +20\nActual score still judged by Kitty.",
-    button: "We Are Ready!"
+    icon: payload.icon || "",
+    title: payloadText(payload.title),
+    copy: payloadText(payload.copy),
+    button: payloadText(payload.button)
   });
 
   teamSpiritButton.disabled = true;
-  teamSpiritButton.textContent = "🔥 TEAM SPIRIT ACTIVE";
-  if (teamSpiritStatus) teamSpiritStatus.textContent = "Recharging Team Spirit…";
+  teamSpiritButton.textContent = payloadText(payload.activeLabel);
+  if (teamSpiritStatus) teamSpiritStatus.textContent = payloadText(payload.cooldownLabel);
 
   clearTimeout(teamSpiritCooldownTimer);
   teamSpiritCooldownTimer = setTimeout(() => {
     teamSpiritButton.disabled = false;
-    teamSpiritButton.textContent = "🔥 ACTIVATE TEAM SPIRIT";
+    teamSpiritButton.textContent = payloadText(payload.readyLabel);
     if (teamSpiritStatus) teamSpiritStatus.textContent = "";
   }, 5000);
 }
@@ -493,9 +538,6 @@ function renderAwardWinners(data = {}) {
 onValue(bridgeRef("awards"), snapshot => renderAwardWinners(snapshot.val() || {}));
 
 
-// Hidden fourth Design Lab question.
-// It appears only after all three normal hints are unlocked and the Hint 3 image
-// is double-clicked (or double-tapped on a phone).
 const hiddenBonusModal = el("hiddenBonusModal");
 const hiddenBonusQuestionView = el("hiddenBonusQuestionView");
 const hiddenBonusSuccess = el("hiddenBonusSuccess");
@@ -503,6 +545,7 @@ const hiddenBonusTeam = el("hiddenBonusTeam");
 const hiddenBonusFeedback = el("hiddenBonusFeedback");
 let hiddenBonusTeamNames = makeTeamNames(DEFAULT_TEAM_COUNT);
 let lastHint3TapAt = 0;
+let activityOnePayload = null;
 
 function allDesignHintsUnlocked() {
   return ["pride", "red", "redlines"].every(key => unlockedHints[key]);
@@ -511,7 +554,7 @@ function allDesignHintsUnlocked() {
 function populateHiddenBonusTeams(count) {
   hiddenBonusTeamNames = makeTeamNames(count);
   const previous = hiddenBonusTeam.value;
-  hiddenBonusTeam.innerHTML = '<option value="">— Select your team —</option>' +
+  hiddenBonusTeam.innerHTML = `<option value="">${payloadText(activityOnePayload?.teamPlaceholder) || "—"}</option>` +
     hiddenBonusTeamNames.map((name, index) =>
       `<option value="${index}">${name}</option>`
     ).join("");
@@ -520,8 +563,31 @@ function populateHiddenBonusTeams(count) {
   }
 }
 
-function openHiddenBonusQuestion() {
+function renderActivityOnePayload(payload) {
+  activityOnePayload = payload;
+  hiddenBonusModal.querySelector(".hidden-bonus-sparkles").textContent = payload.icon || "";
+  hiddenBonusModal.querySelector(".hidden-bonus-label").textContent = payloadText(payload.label);
+  el("hiddenBonusTitle").textContent = payloadText(payload.title);
+  hiddenBonusModal.querySelector(".hidden-bonus-copy").textContent = payloadText(payload.copy);
+  hiddenBonusModal.querySelector(".hidden-bonus-team-label").textContent = payloadText(payload.teamLabel);
+  hiddenBonusModal.querySelector(".hidden-bonus-question").textContent = payloadText(payload.question);
+  hiddenBonusModal.querySelector(".hidden-bonus-options").innerHTML = (payload.options || []).map(option =>
+    `<button type="button" data-choice="${String(option.id).replace(/[^a-z0-9_-]/gi, "")}"></button>`
+  ).join("");
+  [...hiddenBonusModal.querySelectorAll("[data-choice]")].forEach((button, index) => {
+    button.textContent = payloadText(payload.options[index]?.text);
+  });
+  hiddenBonusSuccess.querySelector(".hidden-bonus-celebration").textContent = payload.successIcon || "";
+  hiddenBonusSuccess.querySelector("h2").textContent = payloadText(payload.successTitle);
+  el("finishHiddenBonus").textContent = payloadText(payload.closeButton);
+  populateHiddenBonusTeams(hiddenBonusTeamNames.length);
+}
+
+async function openHiddenBonusQuestion() {
   if (!allDesignHintsUnlocked()) return;
+  const payload = await loadEventPayload("p01");
+  if (!payload) return;
+  renderActivityOnePayload(payload);
   hiddenBonusQuestionView.classList.remove("hidden");
   hiddenBonusSuccess.classList.add("hidden");
   hiddenBonusFeedback.textContent = "";
@@ -541,7 +607,6 @@ hint3Image?.addEventListener("dblclick", event => {
   openHiddenBonusQuestion();
 });
 
-// Mobile double-tap support.
 hint3Image?.addEventListener("touchend", event => {
   if (!allDesignHintsUnlocked()) return;
   const now = Date.now();
@@ -560,28 +625,29 @@ hiddenBonusModal?.addEventListener("click", event => {
   if (event.target === hiddenBonusModal) closeHiddenBonusQuestion();
 });
 
-document.querySelectorAll("[data-hidden-answer]").forEach(button => {
-  button.addEventListener("click", async () => {
+hiddenBonusModal?.querySelector(".hidden-bonus-options")?.addEventListener("click", async event => {
+    const button = event.target.closest("[data-choice]");
+    if (!button || !activityOnePayload) return;
     const teamIndex = Number(hiddenBonusTeam.value);
     if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex >= hiddenBonusTeamNames.length) {
-      hiddenBonusFeedback.textContent = "Please select your team first.";
+      hiddenBonusFeedback.textContent = payloadText(activityOnePayload.selectTeam);
       hiddenBonusFeedback.className = "answer-feedback bad";
       return;
     }
 
-    document.querySelectorAll("[data-hidden-answer]").forEach(item =>
+    hiddenBonusModal.querySelectorAll("[data-choice]").forEach(item =>
       item.classList.remove("correct", "wrong")
     );
 
-    if (button.dataset.hiddenAnswer !== "a") {
+    if (button.dataset.choice !== activityOnePayload.answer) {
       button.classList.add("wrong");
-      hiddenBonusFeedback.textContent = "Not quite. Try another answer.";
+      hiddenBonusFeedback.textContent = payloadText(activityOnePayload.wrong);
       hiddenBonusFeedback.className = "answer-feedback bad";
       return;
     }
 
     button.classList.add("correct");
-    hiddenBonusFeedback.textContent = "Correct! Checking your team reward…";
+    hiddenBonusFeedback.textContent = payloadText(activityOnePayload.correct);
     hiddenBonusFeedback.className = "answer-feedback good";
 
     const teamKey = `team${teamIndex + 1}`;
@@ -596,7 +662,7 @@ document.querySelectorAll("[data-hidden-answer]").forEach(button => {
         return {
           teamName,
           unlockedAt: Date.now(),
-          source: "designLabHiddenQuestion"
+          source: "p01"
         };
       });
 
@@ -604,19 +670,14 @@ document.querySelectorAll("[data-hidden-answer]").forEach(button => {
       hiddenBonusSuccess.classList.remove("hidden");
 
       if (result.committed && firstUnlock) {
-        el("hiddenBonusSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
-          ? `<strong>${teamName}</strong> 已解鎖一份額外資源。請出示此訊息並向<strong>活動工作人員</strong>領取。`
-          : `<strong>${teamName}</strong> has unlocked one extra resource. Show this message and check with <strong>the event team</strong>.`;
+        el("hiddenBonusSuccessText").textContent = payloadTemplate(activityOnePayload.successNew, { team: teamName });
       } else {
-        el("hiddenBonusSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
-          ? `<strong>${teamName}</strong> 已經領取過一次這項隱藏獎勵。`
-          : `<strong>${teamName}</strong> has already claimed this hidden bonus once.`;
+        el("hiddenBonusSuccessText").textContent = payloadTemplate(activityOnePayload.successRepeat, { team: teamName });
       }
     } catch (error) {
-      hiddenBonusFeedback.textContent = error?.message || "Unable to check the reward.";
+      hiddenBonusFeedback.textContent = payloadText(activityOnePayload.unavailable);
       hiddenBonusFeedback.className = "answer-feedback bad";
     }
-  });
 });
 
 onValue(bridgeRef("settings/teamCount"), snapshot => {
@@ -626,8 +687,6 @@ onValue(bridgeRef("settings/teamCount"), snapshot => {
 populateHiddenBonusTeams(DEFAULT_TEAM_COUNT);
 
 
-// Hidden Intel-page dare bonus.
-// Triple-tap/click the Innovation scoring card to trigger a playful warning.
 const intelInnovationSecret = el("intelInnovationSecret");
 const intelDareModal = el("intelDareModal");
 const intelDareForm = el("intelDareForm");
@@ -638,11 +697,12 @@ const intelDareFeedback = el("intelDareFeedback");
 let intelDareTeamNames = makeTeamNames(DEFAULT_TEAM_COUNT);
 let innovationTapCount = 0;
 let innovationTapResetTimer = null;
+let activityTwoPayload = null;
 
 function populateIntelDareTeams(count) {
   intelDareTeamNames = makeTeamNames(count);
   const previous = intelDareTeam.value;
-  intelDareTeam.innerHTML = '<option value="">— Select your team —</option>' +
+  intelDareTeam.innerHTML = `<option value="">${payloadText(activityTwoPayload?.teamPlaceholder) || "—"}</option>` +
     intelDareTeamNames.map((name, index) =>
       `<option value="${index}">${name}</option>`
     ).join("");
@@ -652,7 +712,24 @@ function populateIntelDareTeams(count) {
   }
 }
 
-function openIntelDare() {
+function renderActivityTwoPayload(payload) {
+  activityTwoPayload = payload;
+  intelDareForm.querySelector(".intel-dare-warning-icon").textContent = payload.icon || "";
+  intelDareForm.querySelector(".intel-dare-label").textContent = payloadText(payload.label);
+  el("intelDareTitle").textContent = payloadText(payload.title);
+  intelDareForm.querySelector(".intel-dare-copy").textContent = payloadText(payload.copy);
+  intelDareForm.querySelector(".intel-dare-team-label").textContent = payloadText(payload.teamLabel);
+  el("acceptIntelDare").textContent = payloadText(payload.acceptButton);
+  intelDareSuccess.querySelector(".intel-dare-celebration").textContent = payload.successIcon || "";
+  intelDareSuccess.querySelector("h2").textContent = payloadText(payload.successTitle);
+  el("finishIntelDare").textContent = payloadText(payload.closeButton);
+  populateIntelDareTeams(intelDareTeamNames.length);
+}
+
+async function openIntelDare() {
+  const payload = await loadEventPayload("p02");
+  if (!payload) return;
+  renderActivityTwoPayload(payload);
   intelDareForm.classList.remove("hidden");
   intelDareSuccess.classList.add("hidden");
   intelDareFeedback.textContent = "";
@@ -697,7 +774,7 @@ el("acceptIntelDare")?.addEventListener("click", async () => {
   const teamIndex = Number(intelDareTeam.value);
 
   if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex >= intelDareTeamNames.length) {
-    intelDareFeedback.textContent = "You must select the team brave enough to accept this penalty.";
+    intelDareFeedback.textContent = payloadText(activityTwoPayload?.selectTeam);
     intelDareFeedback.className = "answer-feedback bad";
     return;
   }
@@ -708,7 +785,7 @@ el("acceptIntelDare")?.addEventListener("click", async () => {
   const acceptButton = el("acceptIntelDare");
 
   acceptButton.disabled = true;
-  acceptButton.textContent = "PROCESSING PENALTY…";
+  acceptButton.textContent = payloadText(activityTwoPayload?.processing);
 
   try {
     let firstUnlock = false;
@@ -718,7 +795,7 @@ el("acceptIntelDare")?.addEventListener("click", async () => {
       return {
         teamName,
         unlockedAt: Date.now(),
-        source: "intelInnovationTripleTap"
+        source: "p02"
       };
     });
 
@@ -726,20 +803,16 @@ el("acceptIntelDare")?.addEventListener("click", async () => {
     intelDareSuccess.classList.remove("hidden");
 
     if (result.committed && firstUnlock) {
-      el("intelDareSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
-        ? `其實沒有懲罰！<strong>${teamName}</strong> 發現了隱藏獎勵。請出示此訊息並向<strong>活動工作人員</strong>領取一份額外資源。`
-        : `There is no penalty. <strong>${teamName}</strong> has discovered a hidden reward! Show this message and collect one extra resource from <strong>the event team</strong>.`;
+      el("intelDareSuccessText").textContent = payloadTemplate(activityTwoPayload.successNew, { team: teamName });
     } else {
-      el("intelDareSuccessText").innerHTML = window.bridgeI18n?.language === "zh-HK"
-        ? `<strong>${teamName}</strong> 已經發現並領取過一次這項驚喜。`
-        : `<strong>${teamName}</strong> already discovered and claimed this surprise once.`;
+      el("intelDareSuccessText").textContent = payloadTemplate(activityTwoPayload.successRepeat, { team: teamName });
     }
   } catch (error) {
-    intelDareFeedback.textContent = error?.message || "Unable to check the surprise reward.";
+    intelDareFeedback.textContent = payloadText(activityTwoPayload?.unavailable);
     intelDareFeedback.className = "answer-feedback bad";
   } finally {
     acceptButton.disabled = false;
-    acceptButton.textContent = "I ACCEPT THE PENALTY";
+    acceptButton.textContent = payloadText(activityTwoPayload?.acceptButton);
   }
 });
 
@@ -749,11 +822,28 @@ onValue(bridgeRef("settings/teamCount"), snapshot => {
 
 populateIntelDareTeams(DEFAULT_TEAM_COUNT);
 
+window.addEventListener("bridge-language-change", () => {
+  if (activityOnePayload && !hiddenBonusModal?.classList.contains("hidden")) {
+    renderActivityOnePayload(activityOnePayload);
+  }
+  if (activityTwoPayload && !intelDareModal?.classList.contains("hidden")) {
+    renderActivityTwoPayload(activityTwoPayload);
+  }
+  const spiritPayload = sessionPayloads.get("p05");
+  if (spiritPayload && teamSpiritButton && !teamSpiritButton.disabled) {
+    teamSpiritButton.textContent = payloadText(spiritPayload.readyLabel);
+  }
+  const revealPayload = sessionPayloads.get("p07");
+  const reveal = el("bonusGameReveal");
+  if (revealPayload && reveal && !reveal.classList.contains("hidden")) {
+    reveal.querySelector(".bonus-label").textContent = payloadText(revealPayload.revealLabel);
+    reveal.querySelector("h3").textContent = payloadText(revealPayload.revealTitle);
+    reveal.querySelector(".bonus-game-button").textContent = payloadText(revealPayload.revealButton);
+  }
+});
 
-// Dedicated Super Bonus announcement channel.
-// This is separate from the normal MC announcement, so publishing a new normal
-// message does not remove the accumulated Super Bonus winners.
-function renderSuperBonusAnnouncement(data = {}) {
+
+async function renderSuperBonusAnnouncement(data = {}) {
   let banner = document.getElementById("superBonusAnnouncement");
 
   if (!banner) {
@@ -776,23 +866,37 @@ function renderSuperBonusAnnouncement(data = {}) {
   if (!teams.length) {
     banner.classList.add("hidden");
     banner.innerHTML = "";
-    return;
+    return false;
+  }
+
+  const payload = await loadEventPayload("p08");
+  if (!payload) {
+    banner.classList.add("hidden");
+    banner.innerHTML = "";
+    return false;
   }
 
   const teamNames = teams.map(item => item.teamName).filter(Boolean);
   banner.classList.remove("hidden");
   banner.innerHTML = `
-    <div class="super-bonus-announcement-title">🏆 SUPER BONUS WINNERS</div>
+    <div class="super-bonus-announcement-title"></div>
     <div class="super-bonus-announcement-copy">
-      ${teamNames.join(", ")} ${teamNames.length === 1 ? "has" : "have"} completed all three hidden challenges.
-      Please come forward to collect the SUPER EXTRA RESOURCE!
     </div>
   `;
+  banner.querySelector(".super-bonus-announcement-title").textContent = payloadText(payload.title);
+  banner.querySelector(".super-bonus-announcement-copy").textContent = payloadTemplate(
+    teamNames.length === 1 ? payload.copyOne : payload.copyMany,
+    { teams: teamNames.join(", ") }
+  );
+  return true;
 }
 
-onValue(bridgeRef("superBonusAnnouncement"), snapshot => {
-  const announcement = snapshot.val() || {};
-  renderSuperBonusAnnouncement(announcement);
+let completionChannelInitialized = false;
+let pendingCompletionAnnouncement = null;
+
+async function processCompletionAnnouncement(announcement) {
+  const displayed = await renderSuperBonusAnnouncement(announcement);
+  if (!displayed) return;
 
   Object.values(announcement.teams || {})
     .filter(item => item?.type === "superBonus" && item?.eventId)
@@ -800,7 +904,25 @@ onValue(bridgeRef("superBonusAnnouncement"), snapshot => {
     .forEach(item => {
       queueSuperBonusWinningBell(item.eventId);
     });
+}
+
+onValue(bridgeRef("superBonusAnnouncement"), snapshot => {
+  const announcement = snapshot.val() || {};
+  if (!completionChannelInitialized) {
+    completionChannelInitialized = true;
+    pendingCompletionAnnouncement = announcement;
+    return;
+  }
+  pendingCompletionAnnouncement = null;
+  processCompletionAnnouncement(announcement);
 });
+
+document.addEventListener("pointerdown", () => {
+  if (!pendingCompletionAnnouncement) return;
+  const announcement = pendingCompletionAnnouncement;
+  pendingCompletionAnnouncement = null;
+  processCompletionAnnouncement(announcement);
+}, { once:true, passive:true });
 
 
 // Live load-test results on the Intel page.
@@ -875,7 +997,7 @@ onValue(bridgeRef("settings/teamCount"), snapshot => {
 renderParticipantStrengthResults();
 
 
-// Hidden Interactive Mission Setup Easter egg:
+// Hidden Interactive Mission Setup optional interaction:
 // tap/click the red LOAD block three times to overload and break the demo bridge.
 const missionLoadBlock = el("missionLoadBlock");
 const missionBridgeDeck = el("missionBridgeDeck");
@@ -894,9 +1016,17 @@ function resetMissionBridgeBreak() {
   document.querySelector(".blueprint")?.classList.remove("diagram-overload");
 }
 
-function openBridgeBreakSurprise() {
+async function openBridgeBreakSurprise() {
   if (bridgeBreakRunning) return;
+  const payload = await loadEventPayload("p06");
+  if (!payload) return;
   bridgeBreakRunning = true;
+
+  bridgeBreakModal.querySelector(".bridge-break-icon").textContent = payload.icon || "";
+  bridgeBreakModal.querySelector(".bridge-break-label").textContent = payloadText(payload.label);
+  el("bridgeBreakTitle").textContent = payloadText(payload.title);
+  bridgeBreakModal.querySelector("p").textContent = payloadText(payload.copy);
+  el("closeBridgeBreak").textContent = payloadText(payload.button);
 
   const diagram = document.querySelector(".blueprint");
   diagram?.classList.add("diagram-overload");
@@ -956,47 +1086,46 @@ bridgeBreakModal?.addEventListener("click", event => {
 });
 
 
-// Reusable visual-only popup and timed multi-tap triggers.
-const visualEasterModal = el("visualEasterEggModal");
-const visualEasterTitle = el("visualEasterTitle");
-const visualEasterCopy = el("visualEasterCopy");
-const visualEasterIcon = el("visualEasterIcon");
-const closeVisualEaster = el("closeVisualEaster");
-let visualEasterCleanup = null;
-let visualEasterPreviousFocus = null;
+const momentPanelModal = el("momentPanelModal");
+const momentPanelTitle = el("momentPanelTitle");
+const momentPanelCopy = el("momentPanelCopy");
+const momentPanelIcon = el("momentPanelIcon");
+const closeMomentPanel = el("closeMomentPanel");
+let momentPanelCleanup = null;
+let momentPanelPreviousFocus = null;
 
-function closeVisualEasterEgg() {
-  visualEasterModal?.classList.add("hidden");
-  visualEasterModal?.classList.remove("visual-easter-visible", "coffee", "gap-friendly", "team-spirit");
-  const cleanup = visualEasterCleanup;
-  visualEasterCleanup = null;
+function closeMomentPanelEgg() {
+  momentPanelModal?.classList.add("hidden");
+  momentPanelModal?.classList.remove("moment-panel-visible", "coffee", "gap-friendly", "team-spirit");
+  const cleanup = momentPanelCleanup;
+  momentPanelCleanup = null;
   cleanup?.();
-  visualEasterPreviousFocus?.focus?.();
-  visualEasterPreviousFocus = null;
+  momentPanelPreviousFocus?.focus?.();
+  momentPanelPreviousFocus = null;
 }
 
-function openVisualEasterEgg({ kind, icon, title, copy, button, onClose }) {
-  if (!visualEasterModal) return;
-  if (!visualEasterModal.classList.contains("hidden")) closeVisualEasterEgg();
+function openMomentPanelEgg({ kind, icon, title, copy, button, onClose }) {
+  if (!momentPanelModal) return;
+  if (!momentPanelModal.classList.contains("hidden")) closeMomentPanelEgg();
 
-  visualEasterPreviousFocus = document.activeElement;
-  visualEasterCleanup = onClose || null;
-  visualEasterIcon.textContent = icon;
-  visualEasterTitle.textContent = title;
-  visualEasterCopy.textContent = copy;
-  closeVisualEaster.textContent = button;
-  visualEasterModal.classList.add(kind, "visual-easter-visible");
-  visualEasterModal.classList.remove("hidden");
-  closeVisualEaster.focus();
+  momentPanelPreviousFocus = document.activeElement;
+  momentPanelCleanup = onClose || null;
+  momentPanelIcon.textContent = icon;
+  momentPanelTitle.textContent = title;
+  momentPanelCopy.textContent = copy;
+  closeMomentPanel.textContent = button;
+  momentPanelModal.classList.add(kind, "moment-panel-visible");
+  momentPanelModal.classList.remove("hidden");
+  closeMomentPanel.focus();
 }
 
-closeVisualEaster?.addEventListener("click", closeVisualEasterEgg);
-visualEasterModal?.addEventListener("click", event => {
-  if (event.target === visualEasterModal) closeVisualEasterEgg();
+closeMomentPanel?.addEventListener("click", closeMomentPanelEgg);
+momentPanelModal?.addEventListener("click", event => {
+  if (event.target === momentPanelModal) closeMomentPanelEgg();
 });
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !visualEasterModal?.classList.contains("hidden")) {
-    closeVisualEasterEgg();
+  if (event.key === "Escape" && !momentPanelModal?.classList.contains("hidden")) {
+    closeMomentPanelEgg();
   }
 });
 
@@ -1047,14 +1176,16 @@ let rightCoffeeTapTrigger = null;
 let gapTapTrigger = null;
 let gapPopupTimer = null;
 
-function triggerCoffeeCanDisturbance(can, tapTrigger) {
+async function triggerCoffeeCanDisturbance(can, tapTrigger) {
+  const payload = await loadEventPayload("p03");
+  if (!payload) return;
   can?.classList.add("coffee-can-disturbed");
-  openVisualEasterEgg({
+  openMomentPanelEgg({
     kind: "coffee",
-    icon: "☕♨☕",
-    title: "Coffee Can Disturbance Detected ☕",
-    copy: "Please stop testing the coffee before testing the bridge.\nThe can has officially filed a complaint.",
-    button: "Let the Can Rest",
+    icon: payload.icon || "",
+    title: payloadText(payload.title),
+    copy: payloadText(payload.copy),
+    button: payloadText(payload.button),
     onClose: () => {
       can?.classList.remove("coffee-can-disturbed");
       tapTrigger?.reset();
@@ -1078,24 +1209,26 @@ function resetGapWarning() {
   gapTapTrigger?.reset();
 }
 
-function triggerGapWarning() {
+async function triggerGapWarning() {
+  const payload = await loadEventPayload("p04");
+  if (!payload) return;
   missionGapIndicator?.classList.add("gap-violation-active");
   missionCoffeeCanLeft?.classList.add("gap-can-inward");
   missionCoffeeCanRight?.classList.add("gap-can-inward");
   missionBlueprint?.classList.add("gap-diagram-shake");
 
-  openVisualEasterEgg({
+  openMomentPanelEgg({
     kind: "gap-friendly",
-    icon: "☕ ↔️ ☕",
-    title: "THE CANS NEED SOME SPACE ☕",
-    copy: "They are getting a little too close.",
-    button: "Give Them Space",
+    icon: payload.icon || "",
+    title: payloadText(payload.title),
+    copy: payloadText(payload.copyFirst),
+    button: payloadText(payload.button),
     onClose: resetGapWarning
   });
 
   gapPopupTimer = setTimeout(() => {
-    if (!visualEasterModal?.classList.contains("gap-friendly")) return;
-    visualEasterCopy.textContent = "A little breathing room, please!\nKeep the coffee cans at least 30 cm apart.";
+    if (!momentPanelModal?.classList.contains("gap-friendly")) return;
+    momentPanelCopy.textContent = payloadText(payload.copySecond);
   }, 1000);
 }
 

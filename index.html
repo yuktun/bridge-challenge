@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#020617">
 <title>PRIDE Bridge Challenge</title>
-<link rel="stylesheet" href="styles.css?v=1.7.37">
+<link rel="stylesheet" href="styles.css?v=1.7.40">
 </head>
 <body>
 <div class="app">
@@ -262,15 +262,14 @@
       <label class="check"><input type="checkbox">Prepare a clear explanation of the design and teamwork approach.</label>
       <label class="check"><input type="checkbox">Make sure everyone is ready for the load test and 1-minute sharing.</label>
       <div id="teamSpiritControl" class="team-spirit-control hidden">
-        <button id="activateTeamSpirit" class="team-spirit-button" type="button">🔥 ACTIVATE TEAM SPIRIT</button>
+        <button id="activateTeamSpirit" class="team-spirit-button" type="button"></button>
         <p id="teamSpiritStatus" class="team-spirit-status" aria-live="polite"></p>
       </div>
       <div id="bonusGameReveal" class="bonus-game-reveal hidden">
-    <div class="bonus-confetti" aria-hidden="true">🎉 ✨ 🌉 ✨ 🎉</div>
-    <span class="bonus-label">SECRET BONUS UNLOCKED</span>
-    <h3>Bridge Builder Mini-Game</h3>
-    
-    <a class="bonus-game-button" href="bonus-game.html">🎮 PLAY BONUS GAME</a>
+    <div class="bonus-confetti" aria-hidden="true"></div>
+    <span class="bonus-label"></span>
+    <h3></h3>
+    <a class="bonus-game-button" href="bonus-game.html"></a>
   </div>
 </section>
 </main>
@@ -283,8 +282,8 @@
   <button data-tab="checklist"><span>✅</span>Checklist</button>
 </nav>
 </div>
-<script src="i18n.js?v=1.0.1"></script>
-<script type="module" src="participant.js?v=1.7.39"></script>
+<script src="i18n.js?v=1.0.2"></script>
+<script type="module" src="participant.js?v=1.7.40"></script>
 
 <div id="teamSpiritEffects" class="team-spirit-effects" aria-hidden="true"></div>
 
@@ -310,12 +309,12 @@
 </div>
 
 
-<div id="visualEasterEggModal" class="visual-easter-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="visualEasterTitle" aria-describedby="visualEasterCopy">
-  <div class="visual-easter-modal">
-    <div id="visualEasterIcon" class="visual-easter-icon" aria-hidden="true"></div>
-    <h2 id="visualEasterTitle"></h2>
-    <p id="visualEasterCopy"></p>
-    <button id="closeVisualEaster" type="button"></button>
+<div id="momentPanelModal" class="moment-panel-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="momentPanelTitle" aria-describedby="momentPanelCopy">
+  <div class="moment-panel-modal">
+    <div id="momentPanelIcon" class="moment-panel-icon" aria-hidden="true"></div>
+    <h2 id="momentPanelTitle"></h2>
+    <p id="momentPanelCopy"></p>
+    <button id="closeMomentPanel" type="button"></button>
   </div>
 </div>
 
@@ -323,31 +322,26 @@
   <div class="hidden-bonus-modal">
     <button id="closeHiddenBonus" class="hidden-bonus-close" aria-label="Close">✕</button>
     <div id="hiddenBonusQuestionView">
-      <div class="hidden-bonus-sparkles">✨ 🏠 ✨</div>
-      <span class="hidden-bonus-label">SECRET QUESTION FOUND</span>
-      <h2 id="hiddenBonusTitle">One More Challenge</h2>
-      <p class="hidden-bonus-copy">Select your team, then answer the hidden question.</p>
+      <div class="hidden-bonus-sparkles" aria-hidden="true"></div>
+      <span class="hidden-bonus-label"></span>
+      <h2 id="hiddenBonusTitle"></h2>
+      <p class="hidden-bonus-copy"></p>
 
-      <label class="hidden-bonus-team-label" for="hiddenBonusTeam">Your team</label>
+      <label class="hidden-bonus-team-label" for="hiddenBonusTeam"></label>
       <select id="hiddenBonusTeam">
-        <option value="">Loading teams…</option>
+        <option value=""></option>
       </select>
 
-      <p class="hidden-bonus-question">What is the new DBS house call?</p>
-      <div class="hidden-bonus-options">
-        <button data-hidden-answer="a">DBS Lighthouse</button>
-        <button data-hidden-answer="b">DBS Beacon House</button>
-        <button data-hidden-answer="c">DBS Horizon Hub</button>
-        <button data-hidden-answer="d">DBS Homebase</button>
-      </div>
+      <p class="hidden-bonus-question"></p>
+      <div class="hidden-bonus-options"></div>
       <p id="hiddenBonusFeedback" class="answer-feedback"></p>
     </div>
 
     <div id="hiddenBonusSuccess" class="hidden hidden-bonus-success">
-      <div class="hidden-bonus-celebration">🎉✨🏆✨🎉</div>
-      <h2>Secret Bonus Unlocked!</h2>
+      <div class="hidden-bonus-celebration" aria-hidden="true"></div>
+      <h2></h2>
       <p id="hiddenBonusSuccessText"></p>
-      <button id="finishHiddenBonus" class="hidden-bonus-finish">Got it!</button>
+      <button id="finishHiddenBonus" class="hidden-bonus-finish"></button>
     </div>
   </div>
 </div>
@@ -358,28 +352,25 @@
     <button id="closeIntelDare" class="intel-dare-close" aria-label="Close">✕</button>
 
     <div id="intelDareForm">
-      <div class="intel-dare-warning-icon">⚠️</div>
-      <span class="intel-dare-label">WARNING: HIDDEN PENALTY TRIGGERED</span>
-      <h2 id="intelDareTitle">Are You Brave Enough?</h2>
-      <p class="intel-dare-copy">
-        You tapped Innovation three times. Your team may now face a very serious penalty…
-        Select your team only if you dare.
-      </p>
+      <div class="intel-dare-warning-icon" aria-hidden="true"></div>
+      <span class="intel-dare-label"></span>
+      <h2 id="intelDareTitle"></h2>
+      <p class="intel-dare-copy"></p>
 
-      <label class="intel-dare-team-label" for="intelDareTeam">Team under investigation</label>
+      <label class="intel-dare-team-label" for="intelDareTeam"></label>
       <select id="intelDareTeam">
-        <option value="">Loading teams…</option>
+        <option value=""></option>
       </select>
 
-      <button id="acceptIntelDare" class="intel-dare-accept">I ACCEPT THE PENALTY</button>
+      <button id="acceptIntelDare" class="intel-dare-accept"></button>
       <p id="intelDareFeedback" class="answer-feedback"></p>
     </div>
 
     <div id="intelDareSuccess" class="hidden intel-dare-success">
-      <div class="intel-dare-celebration">🚨 → 🎉✨🎁✨🎉</div>
-      <h2>Plot Twist!</h2>
+      <div class="intel-dare-celebration" aria-hidden="true"></div>
+      <h2></h2>
       <p id="intelDareSuccessText"></p>
-      <button id="finishIntelDare" class="intel-dare-finish">Collect the Surprise</button>
+      <button id="finishIntelDare" class="intel-dare-finish"></button>
     </div>
   </div>
 </div>
@@ -387,14 +378,11 @@
 
 <div id="bridgeBreakModal" class="bridge-break-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="bridgeBreakTitle">
   <div class="bridge-break-modal">
-    <div class="bridge-break-icon">💥🌉💥</div>
-    <span class="bridge-break-label">CRITICAL OVERLOAD</span>
-    <h2 id="bridgeBreakTitle">Oops… You Broke the Bridge!</h2>
-    <p>
-      Too much enthusiasm, not enough structural support.<br>
-      Fortunately, no A4 paper was harmed permanently.
-    </p>
-    <button id="closeBridgeBreak">Repair the Demo Bridge</button>
+    <div class="bridge-break-icon" aria-hidden="true"></div>
+    <span class="bridge-break-label"></span>
+    <h2 id="bridgeBreakTitle"></h2>
+    <p></p>
+    <button id="closeBridgeBreak"></button>
   </div>
 </div>
 

@@ -667,7 +667,6 @@ onValue(bridgeRef("awards"), snapshot => {
 });
 
 
-// ---- Bonus-game Firebase results ----
 let bonusLeaderboard = {};
 let bonusRewards = {};
 
@@ -686,7 +685,7 @@ function renderBonusAdmin() {
   el("bonusRewardBadge").className = `connection ${rewardTeams.length ? "online" : ""}`;
 
   if (!entries.length) {
-    host.innerHTML = '<p class="empty-score">No bonus-game results yet.</p>';
+    host.innerHTML = '<p class="empty-score">No records yet.</p>';
     return;
   }
 
@@ -695,7 +694,7 @@ function renderBonusAdmin() {
     return `<article class="bonus-admin-entry">
       <div>
         <strong>${index + 1}. ${escapeHtml(entry.playerName || "Anonymous")} · ${escapeHtml(entry.teamName || "")}</strong>
-        <small>${qualified ? "✅ Team reward unlocked" : "Score submitted"}</small>
+        <small>${qualified ? "✅ Activity completed" : "Score submitted"}</small>
       </div>
       <b>${Number(entry.score)}</b>
       <small>${Number(entry.submittedAt) ? new Date(Number(entry.submittedAt)).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : ""}</small>
@@ -714,18 +713,17 @@ onValue(bridgeRef("bonusGame/teamRewards"), snapshot => {
 });
 
 el("clearBonusGameButton")?.addEventListener("click", async () => {
-  if (!confirm("Clear the bonus-game leaderboard and all one-time team reward records?")) return;
+  if (!confirm("Clear the Activity 3 leaderboard and completion records?")) return;
 
   try {
     await set(bridgeRef("bonusGame"), null);
-    showMessage("bonusAdminMessage", "Bonus-game results cleared.", "ok");
+    showMessage("bonusAdminMessage", "Activity 3 records cleared.", "ok");
   } catch (error) {
     showMessage("bonusAdminMessage", friendlyError(error), "err", true);
   }
 });
 
 
-// ---- Hidden Design Lab bonus administration ----
 let hiddenBonusRewards = {};
 
 function renderHiddenBonusAdmin() {
@@ -737,7 +735,7 @@ function renderHiddenBonusAdmin() {
     .sort(([, a], [, b]) => Number(a.unlockedAt || 0) - Number(b.unlockedAt || 0));
 
   if (!entries.length) {
-    host.innerHTML = '<p class="empty-score">No teams have unlocked the hidden bonus yet.</p>';
+    host.innerHTML = '<p class="empty-score">No records yet.</p>';
     return;
   }
 
@@ -745,9 +743,9 @@ function renderHiddenBonusAdmin() {
     <article class="bonus-admin-entry">
       <div>
         <strong>${index + 1}. ${escapeHtml(item.teamName || teamKey)}</strong>
-        <small>✅ One-time hidden bonus unlocked</small>
+        <small>✅ Activity completed</small>
       </div>
-      <b>Extra resource</b>
+      <b>Completed</b>
       <small>${Number(item.unlockedAt) ? new Date(Number(item.unlockedAt)).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : ""}</small>
     </article>
   `).join("");
@@ -759,17 +757,16 @@ onValue(bridgeRef("hiddenBonus/teamRewards"), snapshot => {
 });
 
 el("clearHiddenBonusButton")?.addEventListener("click", async () => {
-  if (!confirm("Clear all hidden Design Lab bonus claims?")) return;
+  if (!confirm("Clear all Activity 1 records?")) return;
   try {
     await set(bridgeRef("hiddenBonus"), null);
-    showMessage("hiddenBonusAdminMessage", "Hidden bonus claims cleared.", "ok");
+    showMessage("hiddenBonusAdminMessage", "Activity 1 records cleared.", "ok");
   } catch (error) {
     showMessage("hiddenBonusAdminMessage", friendlyError(error), "err", true);
   }
 });
 
 
-// ---- Intel Innovation triple-tap dare administration ----
 let intelDareRewards = {};
 
 function renderIntelDareAdmin() {
@@ -781,7 +778,7 @@ function renderIntelDareAdmin() {
     .sort(([, a], [, b]) => Number(a.unlockedAt || 0) - Number(b.unlockedAt || 0));
 
   if (!entries.length) {
-    host.innerHTML = '<p class="empty-score">No teams have discovered this surprise yet.</p>';
+    host.innerHTML = '<p class="empty-score">No records yet.</p>';
     return;
   }
 
@@ -789,9 +786,9 @@ function renderIntelDareAdmin() {
     <article class="bonus-admin-entry">
       <div>
         <strong>${index + 1}. ${escapeHtml(item.teamName || teamKey)}</strong>
-        <small>🎁 Intel Innovation surprise unlocked</small>
+        <small>✅ Activity completed</small>
       </div>
-      <b>Extra resource</b>
+      <b>Completed</b>
       <small>${Number(item.unlockedAt) ? new Date(Number(item.unlockedAt)).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : ""}</small>
     </article>
   `).join("");
@@ -803,22 +800,17 @@ onValue(bridgeRef("intelDareBonus/teamRewards"), snapshot => {
 });
 
 el("clearIntelDareButton")?.addEventListener("click", async () => {
-  if (!confirm("Clear all Intel Innovation dare-bonus claims?")) return;
+  if (!confirm("Clear all Activity 2 records?")) return;
 
   try {
     await set(bridgeRef("intelDareBonus"), null);
-    showMessage("intelDareAdminMessage", "Intel dare-bonus claims cleared.", "ok");
+    showMessage("intelDareAdminMessage", "Activity 2 records cleared.", "ok");
   } catch (error) {
     showMessage("intelDareAdminMessage", friendlyError(error), "err", true);
   }
 });
 
 
-// ---- Automatic Super Bonus live announcement ----
-// A team qualifies only after completing all three hidden activities:
-// 1. Bonus Game score reward
-// 2. Hidden Design Lab question
-// 3. Intel Innovation dare
 let bonusGameTeamRewards = {};
 let designLabHiddenRewards = {};
 let intelDareTeamRewards = {};
@@ -903,7 +895,7 @@ function renderSuperBonusAdmin() {
     .sort(([, a], [, b]) => Number(a.announcedAt || 0) - Number(b.announcedAt || 0));
 
   if (!entries.length) {
-    host.innerHTML = '<p class="empty-score">No team has completed all three hidden activities yet.</p>';
+    host.innerHTML = '<p class="empty-score">No records yet.</p>';
     return;
   }
 
@@ -911,9 +903,9 @@ function renderSuperBonusAdmin() {
     <article class="bonus-admin-entry">
       <div>
         <strong>${index + 1}. ${escapeHtml(item.teamName || teamKey)}</strong>
-        <small>🏆 All three hidden activities completed</small>
+        <small>✅ Completion recorded</small>
       </div>
-      <b>Super extra resource</b>
+      <b>Completed</b>
       <small>${Number(item.announcedAt) ? new Date(Number(item.announcedAt)).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : ""}</small>
     </article>
   `).join("");
@@ -925,14 +917,14 @@ onValue(bridgeRef("superBonus/announcedTeams"), snapshot => {
 });
 
 el("clearSuperBonusButton")?.addEventListener("click", async () => {
-  if (!confirm("Reset all Super Bonus announcement records? Teams may be announced again if they still have all three hidden rewards.")) return;
+  if (!confirm("Reset all completion announcement records?")) return;
 
   try {
     await Promise.all([
       set(bridgeRef("superBonus"), null),
       set(bridgeRef("superBonusAnnouncement"), null)
     ]);
-    showMessage("superBonusAdminMessage", "Super Bonus announcements cleared.", "ok");
+    showMessage("superBonusAdminMessage", "Completion announcements cleared.", "ok");
   } catch (error) {
     showMessage("superBonusAdminMessage", friendlyError(error), "err", true);
   }
@@ -940,11 +932,11 @@ el("clearSuperBonusButton")?.addEventListener("click", async () => {
 
 
 el("clearSuperBonusMessageButton")?.addEventListener("click", async () => {
-  if (!confirm("Clear the dedicated Super Bonus winner announcement?")) return;
+  if (!confirm("Clear the dedicated completion announcement?")) return;
 
   try {
     await set(bridgeRef("superBonusAnnouncement"), null);
-    showMessage("superBonusAdminMessage", "Super Bonus winner message cleared.", "ok");
+    showMessage("superBonusAdminMessage", "Completion announcement cleared.", "ok");
   } catch (error) {
     showMessage("superBonusAdminMessage", friendlyError(error), "err", true);
   }
@@ -961,15 +953,12 @@ onValue(bridgeRef("superBonusAnnouncement"), snapshot => {
     .sort((a, b) => Number(a.announcedAt || 0) - Number(b.announcedAt || 0));
 
   if (!teams.length) {
-    preview.textContent = "No Super Bonus winners announced yet.";
+    preview.textContent = "No announcements yet.";
     preview.className = "announcement";
     return;
   }
 
   const names = teams.map(item => item.teamName).filter(Boolean);
-  preview.textContent =
-    `🏆 SUPER BONUS WINNERS: ${names.join(", ")}. ` +
-    `${names.length === 1 ? "This team has" : "These teams have"} completed all three hidden challenges. ` +
-    `Please come forward to collect the SUPER EXTRA RESOURCE!`;
+  preview.textContent = `✅ ${names.join(", ")}`;
   preview.className = "announcement success";
 });

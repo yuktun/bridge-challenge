@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#020617">
 <title>Bridge Challenge — MC Control</title>
-<link rel="stylesheet" href="mc-styles.css?v=1.7.17">
+<link rel="stylesheet" href="mc-styles.css?v=1.7.40">
 </head>
 <body>
 <section id="loginScreen" class="login-screen">
@@ -183,17 +183,17 @@
   <section class="control-card bonus-admin-card">
     <div class="section-heading-row">
       <div>
-        <h2>Bonus Game Results</h2>
-        <p class="small">Live Firebase leaderboard and teams that unlocked the one-time extra-resource reward.</p>
+        <h2>Activity 3 Results</h2>
+        <p class="small">Event leaderboard and completion records.</p>
       </div>
-      <button id="clearBonusGameButton" class="danger compact-btn">Clear Bonus Results</button>
+      <button id="clearBonusGameButton" class="danger compact-btn">Clear Activity 3</button>
     </div>
     <div class="judging-summary">
       <span id="bonusEntryBadge" class="connection">0 leaderboard entries</span>
       <span id="bonusRewardBadge" class="connection">0 teams qualified</span>
     </div>
     <div id="bonusAdminList" class="bonus-admin-list">
-      <p class="empty-score">No bonus-game results yet.</p>
+      <p class="empty-score">No records yet.</p>
     </div>
     <div id="bonusAdminMessage" class="msg"></div>
   </section>
@@ -202,13 +202,13 @@
   <section class="control-card hidden-bonus-admin-card">
     <div class="section-heading-row">
       <div>
-        <h2>Hidden Design Lab Bonus</h2>
-        <p class="small">Teams that answered the secret fourth question and unlocked the one-time extra resource.</p>
+        <h2>Activity 1 Records</h2>
+        <p class="small">Event completion records.</p>
       </div>
-      <button id="clearHiddenBonusButton" class="danger compact-btn">Clear Hidden Bonus</button>
+      <button id="clearHiddenBonusButton" class="danger compact-btn">Clear Activity 1</button>
     </div>
     <div id="hiddenBonusAdminList" class="bonus-admin-list">
-      <p class="empty-score">No teams have unlocked the hidden bonus yet.</p>
+      <p class="empty-score">No records yet.</p>
     </div>
     <div id="hiddenBonusAdminMessage" class="msg"></div>
   </section>
@@ -217,13 +217,13 @@
   <section class="control-card intel-dare-admin-card">
     <div class="section-heading-row">
       <div>
-        <h2>Intel Innovation Dare Bonus</h2>
-        <p class="small">Teams that triple-tapped Innovation and accepted the playful penalty.</p>
+        <h2>Activity 2 Records</h2>
+        <p class="small">Event completion records.</p>
       </div>
-      <button id="clearIntelDareButton" class="danger compact-btn">Clear Intel Dare Bonus</button>
+      <button id="clearIntelDareButton" class="danger compact-btn">Clear Activity 2</button>
     </div>
     <div id="intelDareAdminList" class="bonus-admin-list">
-      <p class="empty-score">No teams have discovered this surprise yet.</p>
+      <p class="empty-score">No records yet.</p>
     </div>
     <div id="intelDareAdminMessage" class="msg"></div>
   </section>
@@ -232,25 +232,25 @@
   <section class="control-card super-bonus-admin-card">
     <div class="section-heading-row">
       <div>
-        <h2>Super Bonus Announcements</h2>
-        <p class="small">A team is announced automatically after completing the Bonus Game reward, Design Lab hidden question and Intel dare.</p>
+        <h2>Completion Announcements</h2>
+        <p class="small">Automatic event completion records.</p>
       </div>
       <div class="button-row">
         <button id="clearSuperBonusMessageButton" class="secondary compact-btn">Clear Winner Message</button>
-        <button id="clearSuperBonusButton" class="danger compact-btn">Reset Super Bonus</button>
+        <button id="clearSuperBonusButton" class="danger compact-btn">Reset Records</button>
       </div>
     </div>
     
     <div class="super-bonus-preview">
-      <h3>Dedicated Super Bonus Announcement</h3>
+      <h3>Dedicated Completion Announcement</h3>
       <p class="small">This message is separate from Live Announcement and keeps every winning team until cleared.</p>
       <div id="superBonusAnnouncementPreview" class="announcement success">
-        No Super Bonus winners announced yet.
+        No announcements yet.
       </div>
     </div>
 
     <div id="superBonusAdminList" class="bonus-admin-list">
-      <p class="empty-score">No team has completed all three hidden activities yet.</p>
+      <p class="empty-score">No records yet.</p>
     </div>
     <div id="superBonusAdminMessage" class="msg"></div>
   </section>
@@ -269,6 +269,6 @@ window.addEventListener("load", () => {
 });
 </script>
 
-<script type="module" src="mc.js?v=1.7.37"></script>
+<script type="module" src="mc.js?v=1.7.40"></script>
 </body>
 </html>

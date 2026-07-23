@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRIDE Bridge Builder Bonus Game</title>
+    <title>PRIDE Bridge Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -56,7 +56,7 @@
             </div>
             <div>
                 <h1 class="font-extrabold text-sm tracking-wide bg-gradient-to-r from-white via-slate-200 to-orange-400 bg-clip-text text-transparent uppercase">GIC BRIDGE CHALLENGE</h1>
-                <p class="text-[10px] text-slate-400 font-medium">Secret Bonus Activity</p>
+                <p id="protectedGameEyebrow" class="text-[10px] text-slate-400 font-medium"></p>
             </div>
         </div>
         <div class="flex items-center gap-2">
@@ -107,8 +107,8 @@
                         <i class="fa-solid fa-bridge text-4xl text-white"></i>
                     </div>
                     <div class="space-y-2">
-                        <h2 class="text-2xl font-black tracking-tight">PRIDE Bridge Builder</h2>
-                        <p class="text-xs text-slate-400 max-w-xs mx-auto">Build the perfect bridges, reach successive platforms, and secure your place on the live event leaderboard while you wait!</p>
+                        <h2 id="protectedGameTitle" class="text-2xl font-black tracking-tight"></h2>
+                        <p id="protectedGameCopy" class="text-xs text-slate-400 max-w-xs mx-auto"></p>
                     </div>
 
 
@@ -119,34 +119,17 @@
                         <select id="teamSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-xs text-white focus:outline-none focus:border-orange-500">
                             <option value="">Loading teams…</option>
                         </select>
-                        <p id="teamSelectStatus" class="text-[10px] leading-relaxed text-slate-400 mt-3"><span>Earn </span><span class="game-highlight-strong">10 points or above</span><span> to unlock </span><span class="game-highlight">one extra resource</span><span> for your team. Each team can unlock it only once.</span></p>
+                        <p id="teamSelectStatus" class="text-[10px] leading-relaxed text-slate-400 mt-3"></p>
                     </div>
 
                     <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 text-left space-y-3 max-w-xs mx-auto">
-                        <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-info"></i> How to Play
-                        </h3>
-                        <ul class="text-xs text-slate-300 space-y-2">
-                            <li class="flex items-start gap-2">
-                                <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">1</span>
-                                <span><span class="game-highlight">Tap &amp; hold</span><span> anywhere to extend the bridge upwards.</span></span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">2</span>
-                                <span><span class="game-highlight">Release</span><span> to let the bridge fall forward.</span></span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">3</span>
-                                <span><span>Land in the </span><span class="game-highlight">red center</span><span> for a </span><span class="game-highlight-strong">Perfect Combo</span><span> bonus!</span></span>
-                            </li>
-                        </ul>
+                        <h3 id="protectedGameInstructionsTitle" class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5"></h3>
+                        <ul id="protectedGameInstructions" class="text-xs text-slate-300 space-y-2"></ul>
                     </div>
                 </div>
 
                 <div class="sticky bottom-0 mt-auto pt-3 pb-1 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent space-y-3">
-                    <button id="startGameBtn" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold py-4 px-6 rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all duration-150 uppercase tracking-wider text-sm">
-                        Start Building
-                    </button>
+                    <button id="startGameBtn" disabled class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold py-4 px-6 rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all duration-150 uppercase tracking-wider text-sm"></button>
                     <p class="text-[10px] text-slate-500">Optimized for touch & mobile screens</p>
                 </div>
             </div>
@@ -223,7 +206,7 @@
         </p>
     </footer>
 
-    <script src="i18n.js"></script>
+    <script src="i18n.js?v=1.0.2"></script>
     <script>
         /* Setup Tone.js synthesizers for fully generated audio */
         let isMuted = false;
@@ -935,7 +918,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
-  getDatabase, ref, onValue, push, set, runTransaction, serverTimestamp
+  getDatabase, ref, onValue, get, push, set, runTransaction, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 import {
   firebaseConfig, BRIDGE_PATH, DEFAULT_TEAM_COUNT, makeTeamNames
@@ -956,12 +939,56 @@ const rewardText = document.getElementById("rewardText");
 let currentLeaderboard = {};
 let currentRewards = {};
 let currentTeamNames = makeTeamNames(DEFAULT_TEAM_COUNT);
+let eventGamePayload = null;
+
+const eventText = value => {
+  if (!value || typeof value !== "object") return String(value || "");
+  return String(value[window.bridgeI18n?.language === "zh-HK" ? "zh" : "en"] || value.en || "");
+};
+
+const eventTemplate = (value, replacements = {}) => Object.entries(replacements).reduce(
+  (text, [key, replacement]) => text.replaceAll(`{${key}}`, replacement),
+  eventText(value)
+);
+
+function renderEventGamePayload() {
+    if (!eventGamePayload) return;
+    const payload = eventGamePayload;
+    document.getElementById("protectedGameTitle").textContent = eventText(payload.gameTitle);
+    document.getElementById("protectedGameEyebrow").textContent = eventText(payload.gameEyebrow);
+    document.getElementById("protectedGameCopy").textContent = eventText(payload.gameCopy);
+    document.getElementById("teamSelectStatus").textContent = eventText(payload.requirement);
+    document.getElementById("protectedGameInstructionsTitle").textContent = eventText(payload.instructionsTitle);
+    document.getElementById("protectedGameInstructions").innerHTML = (payload.instructions || []).map((item, index) =>
+      `<li class="flex items-start gap-2"><span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">${index + 1}</span><span></span></li>`
+    ).join("");
+    [...document.querySelectorAll("#protectedGameInstructions li span:last-child")].forEach((node, index) => {
+      node.textContent = eventText(payload.instructions[index]);
+    });
+    const startButton = document.getElementById("startGameBtn");
+    startButton.textContent = eventText(payload.startButton);
+    startButton.disabled = false;
+}
+
+async function initializeEventGame() {
+  if (sessionStorage.getItem("bridge-access-p07") !== "1") return;
+  try {
+    const enabled = (await get(ref(firebaseDb, "config/hiddenContentEnabled"))).val() === true;
+    if (!enabled) return;
+    const payload = (await get(ref(firebaseDb, "privatePayloads/p07"))).val();
+    if (!payload || typeof payload !== "object") return;
+    eventGamePayload = payload;
+    renderEventGamePayload();
+  } catch {}
+}
 
 const leaderboardOverlay = document.getElementById("leaderboardOverlay");
 const gameOverScreen = document.getElementById("gameOverScreen");
 const openLeaderboardButton = document.getElementById("leaderboardBtn") || document.getElementById("openLeaderboardBtn");
 const openLeaderboardFromGameOver = document.getElementById("openLeaderboardFromGameOver");
 const closeLeaderboardButton = document.getElementById("closeLeaderboardBtn");
+
+window.addEventListener("bridge-language-change", renderEventGamePayload);
 
 function openLeaderboard() {
   renderLeaderboard();
@@ -1087,7 +1114,7 @@ submitScoreBtn.addEventListener("click", async event => {
     });
 
     let firstTeamUnlock = false;
-    if (score >= 10) {
+    if (eventGamePayload && score >= Number(eventGamePayload.minimumScore)) {
       const rewardRef = ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/teamRewards/${teamKey}`);
       const result = await runTransaction(rewardRef, current => {
         if (current) return;
@@ -1102,24 +1129,20 @@ submitScoreBtn.addEventListener("click", async event => {
 
       if (result.committed && firstTeamUnlock) {
         rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-emerald-500/40 bg-emerald-950/50 p-4 text-left";
-        rewardTitle.textContent = "🎉 Extra Resource Unlocked!";
+        rewardTitle.textContent = eventText(eventGamePayload.rewardNewTitle);
         rewardTitle.className = "text-sm font-extrabold text-emerald-300";
-        rewardText.textContent = window.bridgeI18n?.language === "zh-HK"
-          ? `${teamName} 是隊內首位取得 10 分或以上的參加者。請出示此畫面並向活動工作人員領取一份額外資源。`
-          : `${teamName} is the first from your team to score 10 or above. Show this screen and check with the event team to receive one extra resource for your team.`;
+        rewardText.textContent = eventTemplate(eventGamePayload.rewardNewCopy, { team: teamName });
       } else {
         rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-left";
-        rewardTitle.textContent = "⭐ Great score!";
+        rewardTitle.textContent = eventText(eventGamePayload.rewardRepeatTitle);
         rewardTitle.className = "text-sm font-extrabold text-amber-300";
-        rewardText.textContent = window.bridgeI18n?.language === "zh-HK"
-          ? `${teamName} 已經解鎖並領取過一次額外資源。`
-          : `${teamName} has already unlocked its one-time extra resource.`;
+        rewardText.textContent = eventTemplate(eventGamePayload.rewardRepeatCopy, { team: teamName });
       }
     } else {
       rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-slate-700 bg-slate-900 p-4 text-left";
-      rewardTitle.textContent = "Keep building!";
+      rewardTitle.textContent = eventText(eventGamePayload?.rewardTryTitle);
       rewardTitle.className = "text-sm font-extrabold text-slate-200";
-      rewardText.textContent = "Score 10 or above to help your team unlock one extra resource.";
+      rewardText.textContent = eventText(eventGamePayload?.rewardTryCopy);
     }
 
     submitStatus.textContent = "Score saved to the live leaderboard.";
@@ -1135,7 +1158,7 @@ submitScoreBtn.addEventListener("click", async event => {
   }
 });
 
-signInAnonymously(firebaseAuth).catch(error => {
+signInAnonymously(firebaseAuth).then(initializeEventGame).catch(error => {
   document.getElementById("teamSelectStatus").textContent = error?.message || "Firebase sign-in failed.";
   document.getElementById("teamSelectStatus").className = "text-[9px] text-rose-400 mt-2";
 });
