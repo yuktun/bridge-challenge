@@ -973,9 +973,9 @@ function renderEventGamePayload() {
 async function initializeEventGame() {
   if (sessionStorage.getItem("bridge-access-p07") !== "1") return;
   try {
-    const enabled = (await get(ref(firebaseDb, "config/hiddenContentEnabled"))).val() === true;
+    const enabled = (await get(ref(firebaseDb, `${BRIDGE_PATH}/config/hiddenContentEnabled`))).val() === true;
     if (!enabled) return;
-    const payload = (await get(ref(firebaseDb, "privatePayloads/p07"))).val();
+    const payload = (await get(ref(firebaseDb, `${BRIDGE_PATH}/privatePayloads/p07`))).val();
     if (!payload || typeof payload !== "object") return;
     eventGamePayload = payload;
     renderEventGamePayload();

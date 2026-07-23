@@ -10,7 +10,7 @@ Deployment
 Event payload protection
 - Event-only display payloads are stored in Firebase Realtime Database, outside this repository.
 - The client performs one-time reads only after the corresponding interaction is completed.
-- Set /config/hiddenContentEnabled to true shortly before the event and false afterward.
+- Set /bridgeChallenge/config/hiddenContentEnabled to true shortly before the event and false afterward.
 - The default behavior is disabled when the setting is missing or not exactly true.
 - Do not commit the private payload import JSON to this repository.
 

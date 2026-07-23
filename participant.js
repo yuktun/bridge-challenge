@@ -14,9 +14,9 @@ async function loadEventPayload(id) {
   if (sessionPayloads.has(id)) return sessionPayloads.get(id);
   try {
     if (!auth.currentUser) await signInAnonymously(auth);
-    const enabled = (await get(ref(db, "config/hiddenContentEnabled"))).val() === true;
+    const enabled = (await get(bridgeRef("config/hiddenContentEnabled"))).val() === true;
     if (!enabled) return null;
-    const value = (await get(ref(db, `privatePayloads/${id}`))).val();
+    const value = (await get(bridgeRef(`privatePayloads/${id}`))).val();
     if (!value || typeof value !== "object") return null;
     sessionPayloads.set(id, value);
     return value;
