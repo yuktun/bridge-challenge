@@ -943,6 +943,7 @@ let eventGamePayload = null;
 let requiredScore = 30;
 let lastScoreContext = null;
 let rewardEvaluationRunning = false;
+let gameAccessState = "pending";
 
 const normalizeRequiredScore = value => {
   const normalized = typeof value === "string" && value.trim() !== ""
@@ -967,6 +968,7 @@ const gameCopy = (en, zh) =>
   window.bridgeI18n?.language === "zh-HK" ? zh : en;
 
 function renderScoreRequirement(currentScore = null) {
+  if (gameAccessState === "failed") return;
   const status = document.getElementById("teamSelectStatus");
   if (!status) return;
   if (Number.isFinite(currentScore)) {
@@ -1021,18 +1023,34 @@ function renderEventGamePayload() {
 }
 
 async function initializeEventGame() {
-  if (sessionStorage.getItem("x07") !== "1") return;
   try {
     const enabled = (await get(ref(firebaseDb, `${BRIDGE_PATH}/config/hiddenContentEnabled`))).val() === true;
-    if (!enabled) return;
+    if (!enabled) throw new Error("disabled");
     const manifest = (await get(ref(firebaseDb, `${BRIDGE_PATH}/privatePayloads/p09`))).val();
-    const payloadId = manifest?.m?.e07?.p;
-    if (!payloadId) return;
+    const access = manifest?.m?.e07;
+    const queryAccess = new URLSearchParams(window.location.search).get("x");
+    const sessionAccess = access?.k && sessionStorage.getItem(access.k) === "1";
+    if (!access?.p || (!sessionAccess && queryAccess !== access.k)) {
+      throw new Error("access");
+    }
+    sessionStorage.setItem(access.k, "1");
+    const payloadId = access.p;
     const payload = (await get(ref(firebaseDb, `${BRIDGE_PATH}/privatePayloads/${payloadId}`))).val();
-    if (!payload || typeof payload !== "object") return;
+    if (!payload || typeof payload !== "object") throw new Error("payload");
     eventGamePayload = payload;
+    gameAccessState = "ready";
     renderEventGamePayload();
-  } catch {}
+  } catch {
+    gameAccessState = "failed";
+    const status = document.getElementById("teamSelectStatus");
+    if (status) {
+      status.textContent = gameCopy(
+        "Return to the Checklist tab and open the bonus game again.",
+        "請返回 Checklist 分頁，然後重新開啟獎賞遊戲。"
+      );
+      status.className = "text-[10px] leading-relaxed text-amber-400 mt-3";
+    }
+  }
 }
 
 const leaderboardOverlay = document.getElementById("leaderboardOverlay");

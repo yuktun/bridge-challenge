@@ -350,7 +350,8 @@ function updateChecklistProgress() {
       const gameLink = reveal.querySelector(".x-c04");
       gameLink.textContent = payloadText(payload.revealButton);
       const destination = new URL(b.u, window.location.href);
-      destination.searchParams.set("build", "1.7.43");
+      destination.searchParams.set("build", "1.7.44");
+      destination.searchParams.set("x", b.k);
       gameLink.href = destination.href;
       gameLink.addEventListener("click", () => sessionStorage.setItem(b.k, "1"), { once:true });
       reveal.classList.remove("hidden");
