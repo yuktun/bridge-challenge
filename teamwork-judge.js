@@ -198,7 +198,7 @@ function sameKCRank(a, b) {
 }
 
 function renderKCBoard() {
-  const body = el("kittyResultsBody");
+  const body = el("kcResultsBody");
   if (!body) return;
 
   const managerEntries = Object.values(latestInnovation || {}).filter(item => item?.scores);

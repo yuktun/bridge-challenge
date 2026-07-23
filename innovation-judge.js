@@ -15,6 +15,7 @@ let currentJudgeKey = "";
 let currentJudgeName = "";
 let authUser = null;
 let judgeUnsubscribe = null;
+let pendingJudgeName = "";
 const saveTimers = new Map();
 
 function cleanKey(name) {
@@ -57,8 +58,24 @@ el("judgeLoginButton").onclick = () => {
     return;
   }
   el("judgeLoginError").textContent = "";
-  unlock(name);
+  pendingJudgeName = name;
+  el("confirmJudgeName").textContent = name;
+  el("judgeIdentityConfirmation").classList.remove("hidden");
+  el("confirmJudgeButton").focus();
 };
+
+el("confirmJudgeButton").addEventListener("click", () => {
+  if (!ALLOWED_JUDGES.includes(pendingJudgeName)) return;
+  unlock(pendingJudgeName);
+  pendingJudgeName = "";
+});
+
+el("changeJudgeButton").addEventListener("click", () => {
+  pendingJudgeName = "";
+  el("judgeIdentityConfirmation").classList.add("hidden");
+  el("judgePassword").value = "";
+  el("judgeIdentity").focus();
+});
 el("judgePassword").addEventListener("keydown", event => {
   if (event.key === "Enter") el("judgeLoginButton").click();
 });

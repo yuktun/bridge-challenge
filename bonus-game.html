@@ -163,9 +163,12 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-3">
+                <div class="grid grid-cols-2 gap-3">
                     <button id="retryGameBtn" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-orange-500/15 transition-all active:scale-95 text-xs uppercase tracking-wider">
                         Play Again <i class="fa-solid fa-rotate-right ml-1"></i>
+                    </button>
+                    <button id="openLeaderboardFromGameOver" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold py-3.5 px-4 rounded-xl transition-all active:scale-95 text-xs uppercase tracking-wider">
+                        Leaderboard <i class="fa-solid fa-trophy ml-1 text-amber-500"></i>
                     </button>
                 </div>
             </div>
@@ -1072,6 +1075,7 @@ async function initializeEventGame() {
 const leaderboardOverlay = document.getElementById("leaderboardOverlay");
 const gameOverScreen = document.getElementById("gameOverScreen");
 const openLeaderboardButton = document.getElementById("leaderboardBtn") || document.getElementById("openLeaderboardBtn");
+const openLeaderboardFromGameOver = document.getElementById("openLeaderboardFromGameOver");
 const closeLeaderboardButton = document.getElementById("closeLeaderboardBtn");
 
 window.addEventListener("bridge-language-change", () => {
@@ -1095,6 +1099,12 @@ function closeLeaderboard() {
 window.showLeaderboard = openLeaderboard;
 
 openLeaderboardButton?.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  openLeaderboard();
+});
+
+openLeaderboardFromGameOver?.addEventListener("click", event => {
   event.preventDefault();
   event.stopPropagation();
   openLeaderboard();

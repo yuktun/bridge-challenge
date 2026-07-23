@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#020617">
 <title>Innovation Judging — Managers</title>
-<link rel="stylesheet" href="styles.css?v=1.7.16">
+<link rel="stylesheet" href="styles.css?v=1.7.17">
 </head>
 <body>
 <section id="judgeLogin" class="login-screen">
@@ -22,6 +22,14 @@
     <input id="judgePassword" type="password" placeholder="Enter password">
     <button id="judgeLoginButton" class="primary">Open Innovation Scoring</button>
     <div id="judgeLoginError" class="msg err"></div>
+    <div id="judgeIdentityConfirmation" class="identity-confirmation hidden" role="dialog" aria-labelledby="judgeIdentityConfirmationTitle">
+      <p id="judgeIdentityConfirmationTitle">Please confirm your identity</p>
+      <p>Are you <strong id="confirmJudgeName"></strong>?</p>
+      <div class="identity-confirmation-actions">
+        <button id="confirmJudgeButton" type="button" class="primary">Yes, continue</button>
+        <button id="changeJudgeButton" type="button">No, go back</button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -47,6 +55,6 @@
   </section>
   <div id="innovationMessage" class="msg judge-page-message"></div>
 </main>
-<script type="module" src="innovation-judge.js?v=1.7.1"></script>
+<script type="module" src="innovation-judge.js?v=1.7.2"></script>
 </body>
 </html>
