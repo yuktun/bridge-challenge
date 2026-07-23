@@ -5,8 +5,58 @@
       ".write": "auth != null"
     },
     "bridgeChallenge": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "announcement": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "awards": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "bonusGame": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "hiddenBonus": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "intelDareBonus": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "scores": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "settings": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "state": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "superBonus": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "superBonusAnnouncement": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "config": {
+        "hiddenContentEnabled": {
+          ".read": "auth != null",
+          ".write": false
+        }
+      },
+      "privatePayloads": {
+        "$payloadId": {
+          ".read": "auth != null && root.child('bridgeChallenge/config/hiddenContentEnabled').val() === true",
+          ".write": false
+        }
+      }
     }
   }
 }

@@ -971,11 +971,14 @@ function renderEventGamePayload() {
 }
 
 async function initializeEventGame() {
-  if (sessionStorage.getItem("bridge-access-p07") !== "1") return;
+  if (sessionStorage.getItem("x07") !== "1") return;
   try {
     const enabled = (await get(ref(firebaseDb, `${BRIDGE_PATH}/config/hiddenContentEnabled`))).val() === true;
     if (!enabled) return;
-    const payload = (await get(ref(firebaseDb, `${BRIDGE_PATH}/privatePayloads/p07`))).val();
+    const manifest = (await get(ref(firebaseDb, `${BRIDGE_PATH}/privatePayloads/p09`))).val();
+    const payloadId = manifest?.m?.e07?.p;
+    if (!payloadId) return;
+    const payload = (await get(ref(firebaseDb, `${BRIDGE_PATH}/privatePayloads/${payloadId}`))).val();
     if (!payload || typeof payload !== "object") return;
     eventGamePayload = payload;
     renderEventGamePayload();

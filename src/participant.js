@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { getDatabase, ref, onValue, get, runTransaction } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
-import { firebaseConfig, BRIDGE_PATH, DEFAULT_TEAM_COUNT, makeTeamNames } from "./config.js";
+import { firebaseConfig, BRIDGE_PATH, DEFAULT_TEAM_COUNT, makeTeamNames } from "../config.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -9,6 +9,7 @@ const db = getDatabase(app);
 const el = id => document.getElementById(id);
 const bridgeRef = path => ref(db, `${BRIDGE_PATH}/${path}`);
 const sessionPayloads = new Map();
+let x0 = null;
 
 async function loadEventPayload(id) {
   if (sessionPayloads.has(id)) return sessionPayloads.get(id);
@@ -37,12 +38,19 @@ function payloadTemplate(value, replacements = {}) {
   );
 }
 
+const x1 = id => x0?.m?.[id] || null;
+
+loadEventPayload("p09").then(value => {
+  x0 = value;
+  if (value) updateChecklistProgress();
+});
+
 let serverOffset = 0;
 let state = {};
 let renderTicker = null;
 
-const SUPER_BONUS_SOUND_ENABLED_KEY = "bridge-super-bonus-sound-enabled";
-const SUPER_BONUS_PLAYED_EVENTS_KEY = "bridge-super-bonus-played-events";
+const SUPER_BONUS_SOUND_ENABLED_KEY = "x80";
+const SUPER_BONUS_PLAYED_EVENTS_KEY = "x81";
 let superBonusSoundEnabled = localStorage.getItem(SUPER_BONUS_SOUND_ENABLED_KEY) !== "false";
 let superBonusAudioContext = null;
 let superBonusAudioBufferPromise = null;
@@ -83,7 +91,7 @@ function loadSuperBonusAudioBuffer() {
     const context = getSuperBonusAudioContext();
     if (!context) return Promise.resolve(null);
 
-    const soundUrl = new URL("./super-bonus-victory-chime.mp3?v=1.0", import.meta.url);
+    const soundUrl = new URL("../super-bonus-victory-chime.mp3?v=1.0", import.meta.url);
     superBonusAudioBufferPromise = fetch(soundUrl)
       .then(response => {
         if (!response.ok) throw new Error(`Unable to load Super Bonus sound (${response.status})`);
@@ -309,44 +317,47 @@ hot.forEach(part => {
 const checks = [...document.querySelectorAll(".check input")];
 let bonusRevealTimer = null;
 let bonusAlreadyRevealed = false;
-const teamSpiritControl = el("teamSpiritControl");
+const e06 = el("e06");
 
 function updateChecklistProgress() {
   const checkedCount = checks.filter(item => item.checked).length;
   el("checkProgress").style.width = `${checkedCount / checks.length * 100}%`;
 
-  const firstThreeComplete = checks.slice(0, 3).every(item => item.checked);
-  const firstChecklistItemComplete = Boolean(checks[0]?.checked);
-  const reveal = el("bonusGameReveal");
-  if (firstChecklistItemComplete) {
-    loadEventPayload("p05").then(payload => {
-      if (!payload || !checks[0]?.checked) return;
+  const a = x1("e06");
+  const b = x1("e07");
+  const aReady = Array.isArray(a?.q) && a.q.every(index => checks[index]?.checked);
+  const bReady = Array.isArray(b?.q) && b.q.every(index => checks[index]?.checked);
+  const reveal = el("e07");
+  if (aReady) {
+    loadEventPayload(a.p).then(payload => {
+      if (!payload || !a.q.every(index => checks[index]?.checked)) return;
       teamSpiritButton.textContent = payloadText(payload.readyLabel);
-      teamSpiritControl?.classList.remove("hidden");
+      e06?.classList.remove("hidden");
     });
   } else {
-    teamSpiritControl?.classList.add("hidden");
+    e06?.classList.add("hidden");
   }
 
-  if (firstThreeComplete && !bonusAlreadyRevealed && !bonusRevealTimer) {
+  if (bReady && !bonusAlreadyRevealed && !bonusRevealTimer) {
     bonusRevealTimer = setTimeout(async () => {
       bonusAlreadyRevealed = true;
       bonusRevealTimer = null;
-      const payload = await loadEventPayload("p07");
+      const payload = await loadEventPayload(b.p);
       if (!payload) return;
-      reveal.querySelector(".bonus-confetti").textContent = payload.revealIcon || "";
-      reveal.querySelector(".bonus-label").textContent = payloadText(payload.revealLabel);
+      reveal.querySelector(".x-c02").textContent = payload.revealIcon || "";
+      reveal.querySelector(".x-c03").textContent = payloadText(payload.revealLabel);
       reveal.querySelector("h3").textContent = payloadText(payload.revealTitle);
-      const gameLink = reveal.querySelector(".bonus-game-button");
+      const gameLink = reveal.querySelector(".x-c04");
       gameLink.textContent = payloadText(payload.revealButton);
-      gameLink.addEventListener("click", () => sessionStorage.setItem("bridge-access-p07", "1"), { once:true });
+      gameLink.href = b.u;
+      gameLink.addEventListener("click", () => sessionStorage.setItem(b.k, "1"), { once:true });
       reveal.classList.remove("hidden");
-      reveal.classList.add("bonus-reveal-active");
+      reveal.classList.add("x-c05");
       reveal.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 5000);
+    }, b.d);
   }
 
-  if (!firstThreeComplete && !bonusAlreadyRevealed) {
+  if (!bReady && !bonusAlreadyRevealed) {
     clearTimeout(bonusRevealTimer);
     bonusRevealTimer = null;
   }
@@ -354,17 +365,17 @@ function updateChecklistProgress() {
 
 checks.forEach(item => item.addEventListener("change", updateChecklistProgress));
 
-const teamSpiritButton = el("activateTeamSpirit");
-const teamSpiritStatus = el("teamSpiritStatus");
-const teamSpiritEffects = el("teamSpiritEffects");
+const teamSpiritButton = el("e06a");
+const e06b = el("e06b");
+const e06c = el("e06c");
 let teamSpiritCooldownTimer = null;
 let teamSpiritEffectTimer = null;
 
 function clearTeamSpiritEffects() {
   clearTimeout(teamSpiritEffectTimer);
-  document.body.classList.remove("team-spirit-glow");
-  teamSpiritEffects?.classList.remove("team-spirit-effects-active");
-  if (teamSpiritEffects) teamSpiritEffects.replaceChildren();
+  document.body.classList.remove("x-c56");
+  e06c?.classList.remove("x-c54");
+  if (e06c) e06c.replaceChildren();
 }
 
 function launchTeamSpiritEffects() {
@@ -380,22 +391,24 @@ function launchTeamSpiritEffects() {
     particle.style.setProperty("--confetti-drift", `${(Math.random() - .5) * 180}px`);
     particle.style.setProperty("--confetti-delay", `${Math.random() * .55}s`);
     particle.style.setProperty("--confetti-duration", `${2.1 + Math.random() * .8}s`);
-    teamSpiritEffects?.appendChild(particle);
+    e06c?.appendChild(particle);
   }
 
-  document.body.classList.add("team-spirit-glow");
-  teamSpiritEffects?.classList.add("team-spirit-effects-active");
+  document.body.classList.add("x-c56");
+  e06c?.classList.add("x-c54");
   teamSpiritEffectTimer = setTimeout(clearTeamSpiritEffects, 3000);
 }
 
-async function activateTeamSpirit() {
+async function e06a() {
   if (!teamSpiritButton || teamSpiritButton.disabled) return;
-  const payload = await loadEventPayload("p05");
+  const cfg = x1("e06");
+  if (!cfg) return;
+  const payload = await loadEventPayload(cfg.p);
   if (!payload) return;
 
   launchTeamSpiritEffects();
   openMomentPanelEgg({
-    kind: "team-spirit",
+    kind: "x-k3",
     icon: payload.icon || "",
     title: payloadText(payload.title),
     copy: payloadText(payload.copy),
@@ -404,19 +417,19 @@ async function activateTeamSpirit() {
 
   teamSpiritButton.disabled = true;
   teamSpiritButton.textContent = payloadText(payload.activeLabel);
-  if (teamSpiritStatus) teamSpiritStatus.textContent = payloadText(payload.cooldownLabel);
+  if (e06b) e06b.textContent = payloadText(payload.cooldownLabel);
 
   clearTimeout(teamSpiritCooldownTimer);
   teamSpiritCooldownTimer = setTimeout(() => {
     teamSpiritButton.disabled = false;
     teamSpiritButton.textContent = payloadText(payload.readyLabel);
-    if (teamSpiritStatus) teamSpiritStatus.textContent = "";
-  }, 5000);
+    if (e06b) e06b.textContent = "";
+  }, cfg.c);
 }
 
-teamSpiritButton?.addEventListener("click", activateTeamSpirit);
+teamSpiritButton?.addEventListener("click", e06a);
 
-signInAnonymously(auth).catch(console.error);
+signInAnonymously(auth).catch(() => {});
 
 
 // Design Lab unlock questions
@@ -426,12 +439,12 @@ const designAnswers = {
   redlines: "a"
 };
 
-const unlockedHints = JSON.parse(localStorage.getItem("bridgeUnlockedHints") || "{}");
+const unlockedHints = JSON.parse(localStorage.getItem("x01") || "{}");
 
 function unlockHint(questionKey, save = true){
   const card = document.querySelector(`.hint-card[data-hint="${questionKey}"]`);
   const question = document.getElementById(`question-${questionKey}`);
-  const hint = document.getElementById(`hint-${questionKey}`);
+  const hint = questionKey === "redlines" ? el("e05") : document.getElementById(`hint-${questionKey}`);
   const status = document.getElementById(`status-${questionKey}`);
 
   card?.classList.add("unlocked");
@@ -441,7 +454,7 @@ function unlockHint(questionKey, save = true){
 
   if(save){
     unlockedHints[questionKey] = true;
-    localStorage.setItem("bridgeUnlockedHints", JSON.stringify(unlockedHints));
+    localStorage.setItem("x01", JSON.stringify(unlockedHints));
   }
 }
 
@@ -538,70 +551,73 @@ function renderAwardWinners(data = {}) {
 onValue(bridgeRef("awards"), snapshot => renderAwardWinners(snapshot.val() || {}));
 
 
-const hiddenBonusModal = el("hiddenBonusModal");
-const hiddenBonusQuestionView = el("hiddenBonusQuestionView");
-const hiddenBonusSuccess = el("hiddenBonusSuccess");
-const hiddenBonusTeam = el("hiddenBonusTeam");
-const hiddenBonusFeedback = el("hiddenBonusFeedback");
-let hiddenBonusTeamNames = makeTeamNames(DEFAULT_TEAM_COUNT);
+const x11 = el("x11");
+const x12 = el("x12");
+const x13 = el("x13");
+const x14 = el("x14");
+const x15 = el("x15");
+let x14Names = makeTeamNames(DEFAULT_TEAM_COUNT);
 let lastHint3TapAt = 0;
+let hint3TapCount = 0;
 let activityOnePayload = null;
 
 function allDesignHintsUnlocked() {
-  return ["pride", "red", "redlines"].every(key => unlockedHints[key]);
+  const cfg = x1("e05");
+  return Boolean(cfg) && (!cfg.a || ["pride", "red", "redlines"].every(key => unlockedHints[key]));
 }
 
 function populateHiddenBonusTeams(count) {
-  hiddenBonusTeamNames = makeTeamNames(count);
-  const previous = hiddenBonusTeam.value;
-  hiddenBonusTeam.innerHTML = `<option value="">${payloadText(activityOnePayload?.teamPlaceholder) || "—"}</option>` +
-    hiddenBonusTeamNames.map((name, index) =>
+  x14Names = makeTeamNames(count);
+  const previous = x14.value;
+  x14.innerHTML = `<option value="">${payloadText(activityOnePayload?.teamPlaceholder) || "—"}</option>` +
+    x14Names.map((name, index) =>
       `<option value="${index}">${name}</option>`
     ).join("");
-  if (previous !== "" && Number(previous) < hiddenBonusTeamNames.length) {
-    hiddenBonusTeam.value = previous;
+  if (previous !== "" && Number(previous) < x14Names.length) {
+    x14.value = previous;
   }
 }
 
 function renderActivityOnePayload(payload) {
   activityOnePayload = payload;
-  hiddenBonusModal.querySelector(".hidden-bonus-sparkles").textContent = payload.icon || "";
-  hiddenBonusModal.querySelector(".hidden-bonus-label").textContent = payloadText(payload.label);
-  el("hiddenBonusTitle").textContent = payloadText(payload.title);
-  hiddenBonusModal.querySelector(".hidden-bonus-copy").textContent = payloadText(payload.copy);
-  hiddenBonusModal.querySelector(".hidden-bonus-team-label").textContent = payloadText(payload.teamLabel);
-  hiddenBonusModal.querySelector(".hidden-bonus-question").textContent = payloadText(payload.question);
-  hiddenBonusModal.querySelector(".hidden-bonus-options").innerHTML = (payload.options || []).map(option =>
+  x11.querySelector(".x-c15").textContent = payload.icon || "";
+  x11.querySelector(".x-c17").textContent = payloadText(payload.label);
+  el("x16").textContent = payloadText(payload.title);
+  x11.querySelector(".x-c18").textContent = payloadText(payload.copy);
+  x11.querySelector(".x-c19").textContent = payloadText(payload.teamLabel);
+  x11.querySelector(".x-c1a").textContent = payloadText(payload.question);
+  x11.querySelector(".x-c1b").innerHTML = (payload.options || []).map(option =>
     `<button type="button" data-choice="${String(option.id).replace(/[^a-z0-9_-]/gi, "")}"></button>`
   ).join("");
-  [...hiddenBonusModal.querySelectorAll("[data-choice]")].forEach((button, index) => {
+  [...x11.querySelectorAll("[data-choice]")].forEach((button, index) => {
     button.textContent = payloadText(payload.options[index]?.text);
   });
-  hiddenBonusSuccess.querySelector(".hidden-bonus-celebration").textContent = payload.successIcon || "";
-  hiddenBonusSuccess.querySelector("h2").textContent = payloadText(payload.successTitle);
-  el("finishHiddenBonus").textContent = payloadText(payload.closeButton);
-  populateHiddenBonusTeams(hiddenBonusTeamNames.length);
+  x13.querySelector(".x-c16").textContent = payload.successIcon || "";
+  x13.querySelector("h2").textContent = payloadText(payload.successTitle);
+  el("x17").textContent = payloadText(payload.closeButton);
+  populateHiddenBonusTeams(x14Names.length);
 }
 
 async function openHiddenBonusQuestion() {
   if (!allDesignHintsUnlocked()) return;
-  const payload = await loadEventPayload("p01");
+  const cfg = x1("e05");
+  const payload = await loadEventPayload(cfg.p);
   if (!payload) return;
   renderActivityOnePayload(payload);
-  hiddenBonusQuestionView.classList.remove("hidden");
-  hiddenBonusSuccess.classList.add("hidden");
-  hiddenBonusFeedback.textContent = "";
-  hiddenBonusFeedback.className = "answer-feedback";
-  hiddenBonusModal.classList.remove("hidden");
-  hiddenBonusModal.classList.add("hidden-bonus-visible");
+  x12.classList.remove("hidden");
+  x13.classList.add("hidden");
+  x15.textContent = "";
+  x15.className = "answer-feedback";
+  x11.classList.remove("hidden");
+  x11.classList.add("x-c13");
 }
 
-function closeHiddenBonusQuestion() {
-  hiddenBonusModal.classList.add("hidden");
-  hiddenBonusModal.classList.remove("hidden-bonus-visible");
+function x18Question() {
+  x11.classList.add("hidden");
+  x11.classList.remove("x-c13");
 }
 
-const hint3Image = document.querySelector('#hint-redlines .design-visual');
+const hint3Image = document.querySelector('#e05 .design-visual');
 hint3Image?.addEventListener("dblclick", event => {
   event.preventDefault();
   openHiddenBonusQuestion();
@@ -609,50 +625,58 @@ hint3Image?.addEventListener("dblclick", event => {
 
 hint3Image?.addEventListener("touchend", event => {
   if (!allDesignHintsUnlocked()) return;
+  const cfg = x1("e05");
+  if (!cfg) return;
   const now = Date.now();
-  if (now - lastHint3TapAt < 600) {
+  if (!lastHint3TapAt || now - lastHint3TapAt > cfg.w) {
+    hint3TapCount = 0;
+  }
+  lastHint3TapAt = now;
+  hint3TapCount += 1;
+  if (hint3TapCount >= cfg.n) {
     event.preventDefault();
     openHiddenBonusQuestion();
     lastHint3TapAt = 0;
-  } else {
-    lastHint3TapAt = now;
+    hint3TapCount = 0;
   }
 }, { passive: false });
 
-el("closeHiddenBonus")?.addEventListener("click", closeHiddenBonusQuestion);
-el("finishHiddenBonus")?.addEventListener("click", closeHiddenBonusQuestion);
-hiddenBonusModal?.addEventListener("click", event => {
-  if (event.target === hiddenBonusModal) closeHiddenBonusQuestion();
+el("x18")?.addEventListener("click", x18Question);
+el("x17")?.addEventListener("click", x18Question);
+x11?.addEventListener("click", event => {
+  if (event.target === x11) x18Question();
 });
 
-hiddenBonusModal?.querySelector(".hidden-bonus-options")?.addEventListener("click", async event => {
+x11?.querySelector(".x-c1b")?.addEventListener("click", async event => {
     const button = event.target.closest("[data-choice]");
     if (!button || !activityOnePayload) return;
-    const teamIndex = Number(hiddenBonusTeam.value);
-    if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex >= hiddenBonusTeamNames.length) {
-      hiddenBonusFeedback.textContent = payloadText(activityOnePayload.selectTeam);
-      hiddenBonusFeedback.className = "answer-feedback bad";
+    const teamIndex = Number(x14.value);
+    if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex >= x14Names.length) {
+      x15.textContent = payloadText(activityOnePayload.selectTeam);
+      x15.className = "answer-feedback bad";
       return;
     }
 
-    hiddenBonusModal.querySelectorAll("[data-choice]").forEach(item =>
+    x11.querySelectorAll("[data-choice]").forEach(item =>
       item.classList.remove("correct", "wrong")
     );
 
     if (button.dataset.choice !== activityOnePayload.answer) {
       button.classList.add("wrong");
-      hiddenBonusFeedback.textContent = payloadText(activityOnePayload.wrong);
-      hiddenBonusFeedback.className = "answer-feedback bad";
+      x15.textContent = payloadText(activityOnePayload.wrong);
+      x15.className = "answer-feedback bad";
       return;
     }
 
     button.classList.add("correct");
-    hiddenBonusFeedback.textContent = payloadText(activityOnePayload.correct);
-    hiddenBonusFeedback.className = "answer-feedback good";
+    x15.textContent = payloadText(activityOnePayload.correct);
+    x15.className = "answer-feedback good";
 
     const teamKey = `team${teamIndex + 1}`;
-    const teamName = hiddenBonusTeamNames[teamIndex];
-    const rewardRef = bridgeRef(`hiddenBonus/teamRewards/${teamKey}`);
+    const teamName = x14Names[teamIndex];
+    const cfg = x1("e05");
+    if (!cfg) return;
+    const rewardRef = bridgeRef(`${cfg.r}/teamRewards/${teamKey}`);
 
     try {
       let firstUnlock = false;
@@ -662,21 +686,21 @@ hiddenBonusModal?.querySelector(".hidden-bonus-options")?.addEventListener("clic
         return {
           teamName,
           unlockedAt: Date.now(),
-          source: "p01"
+          source: cfg.s
         };
       });
 
-      hiddenBonusQuestionView.classList.add("hidden");
-      hiddenBonusSuccess.classList.remove("hidden");
+      x12.classList.add("hidden");
+      x13.classList.remove("hidden");
 
       if (result.committed && firstUnlock) {
-        el("hiddenBonusSuccessText").textContent = payloadTemplate(activityOnePayload.successNew, { team: teamName });
+        el("x19").textContent = payloadTemplate(activityOnePayload.successNew, { team: teamName });
       } else {
-        el("hiddenBonusSuccessText").textContent = payloadTemplate(activityOnePayload.successRepeat, { team: teamName });
+        el("x19").textContent = payloadTemplate(activityOnePayload.successRepeat, { team: teamName });
       }
     } catch (error) {
-      hiddenBonusFeedback.textContent = payloadText(activityOnePayload.unavailable);
-      hiddenBonusFeedback.className = "answer-feedback bad";
+      x15.textContent = payloadText(activityOnePayload.unavailable);
+      x15.className = "answer-feedback bad";
     }
 });
 
@@ -687,102 +711,108 @@ onValue(bridgeRef("settings/teamCount"), snapshot => {
 populateHiddenBonusTeams(DEFAULT_TEAM_COUNT);
 
 
-const intelInnovationSecret = el("intelInnovationSecret");
-const intelDareModal = el("intelDareModal");
-const intelDareForm = el("intelDareForm");
-const intelDareSuccess = el("intelDareSuccess");
-const intelDareTeam = el("intelDareTeam");
-const intelDareFeedback = el("intelDareFeedback");
+const e01 = el("e01");
+const x21 = el("x21");
+const x22 = el("x22");
+const x23 = el("x23");
+const x24 = el("x24");
+const x25 = el("x25");
 
-let intelDareTeamNames = makeTeamNames(DEFAULT_TEAM_COUNT);
+let x24Names = makeTeamNames(DEFAULT_TEAM_COUNT);
 let innovationTapCount = 0;
 let innovationTapResetTimer = null;
 let activityTwoPayload = null;
 
 function populateIntelDareTeams(count) {
-  intelDareTeamNames = makeTeamNames(count);
-  const previous = intelDareTeam.value;
-  intelDareTeam.innerHTML = `<option value="">${payloadText(activityTwoPayload?.teamPlaceholder) || "—"}</option>` +
-    intelDareTeamNames.map((name, index) =>
+  x24Names = makeTeamNames(count);
+  const previous = x24.value;
+  x24.innerHTML = `<option value="">${payloadText(activityTwoPayload?.teamPlaceholder) || "—"}</option>` +
+    x24Names.map((name, index) =>
       `<option value="${index}">${name}</option>`
     ).join("");
 
-  if (previous !== "" && Number(previous) < intelDareTeamNames.length) {
-    intelDareTeam.value = previous;
+  if (previous !== "" && Number(previous) < x24Names.length) {
+    x24.value = previous;
   }
 }
 
 function renderActivityTwoPayload(payload) {
   activityTwoPayload = payload;
-  intelDareForm.querySelector(".intel-dare-warning-icon").textContent = payload.icon || "";
-  intelDareForm.querySelector(".intel-dare-label").textContent = payloadText(payload.label);
-  el("intelDareTitle").textContent = payloadText(payload.title);
-  intelDareForm.querySelector(".intel-dare-copy").textContent = payloadText(payload.copy);
-  intelDareForm.querySelector(".intel-dare-team-label").textContent = payloadText(payload.teamLabel);
-  el("acceptIntelDare").textContent = payloadText(payload.acceptButton);
-  intelDareSuccess.querySelector(".intel-dare-celebration").textContent = payload.successIcon || "";
-  intelDareSuccess.querySelector("h2").textContent = payloadText(payload.successTitle);
-  el("finishIntelDare").textContent = payloadText(payload.closeButton);
-  populateIntelDareTeams(intelDareTeamNames.length);
+  x22.querySelector(".x-c25").textContent = payload.icon || "";
+  x22.querySelector(".x-c26").textContent = payloadText(payload.label);
+  el("x26").textContent = payloadText(payload.title);
+  x22.querySelector(".x-c27").textContent = payloadText(payload.copy);
+  x22.querySelector(".x-c28").textContent = payloadText(payload.teamLabel);
+  el("x27").textContent = payloadText(payload.acceptButton);
+  x23.querySelector(".x-c2b").textContent = payload.successIcon || "";
+  x23.querySelector("h2").textContent = payloadText(payload.successTitle);
+  el("x28").textContent = payloadText(payload.closeButton);
+  populateIntelDareTeams(x24Names.length);
 }
 
 async function openIntelDare() {
-  const payload = await loadEventPayload("p02");
+  const cfg = x1("e01");
+  if (!cfg) return;
+  const payload = await loadEventPayload(cfg.p);
   if (!payload) return;
   renderActivityTwoPayload(payload);
-  intelDareForm.classList.remove("hidden");
-  intelDareSuccess.classList.add("hidden");
-  intelDareFeedback.textContent = "";
-  intelDareFeedback.className = "answer-feedback";
-  intelDareModal.classList.remove("hidden");
-  intelDareModal.classList.add("intel-dare-visible");
+  x22.classList.remove("hidden");
+  x23.classList.add("hidden");
+  x25.textContent = "";
+  x25.className = "answer-feedback";
+  x21.classList.remove("hidden");
+  x21.classList.add("x-c23");
 }
 
-function closeIntelDare() {
-  intelDareModal.classList.add("hidden");
-  intelDareModal.classList.remove("intel-dare-visible");
+function x29() {
+  x21.classList.add("hidden");
+  x21.classList.remove("x-c23");
 }
 
 function registerInnovationSecretTap(event) {
+  const cfg = x1("e01");
+  if (!cfg) return;
   event.preventDefault();
   innovationTapCount += 1;
 
   clearTimeout(innovationTapResetTimer);
   innovationTapResetTimer = setTimeout(() => {
     innovationTapCount = 0;
-  }, 900);
+  }, cfg.w);
 
-  if (innovationTapCount >= 3) {
+  if (innovationTapCount >= cfg.n) {
     innovationTapCount = 0;
     clearTimeout(innovationTapResetTimer);
     openIntelDare();
   }
 }
 
-intelInnovationSecret?.addEventListener("click", registerInnovationSecretTap);
-intelInnovationSecret?.addEventListener("keydown", event => {
+e01?.addEventListener("click", registerInnovationSecretTap);
+e01?.addEventListener("keydown", event => {
   if (event.key === "Enter" || event.key === " ") registerInnovationSecretTap(event);
 });
 
-el("closeIntelDare")?.addEventListener("click", closeIntelDare);
-el("finishIntelDare")?.addEventListener("click", closeIntelDare);
-intelDareModal?.addEventListener("click", event => {
-  if (event.target === intelDareModal) closeIntelDare();
+el("x29")?.addEventListener("click", x29);
+el("x28")?.addEventListener("click", x29);
+x21?.addEventListener("click", event => {
+  if (event.target === x21) x29();
 });
 
-el("acceptIntelDare")?.addEventListener("click", async () => {
-  const teamIndex = Number(intelDareTeam.value);
+el("x27")?.addEventListener("click", async () => {
+  const teamIndex = Number(x24.value);
 
-  if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex >= intelDareTeamNames.length) {
-    intelDareFeedback.textContent = payloadText(activityTwoPayload?.selectTeam);
-    intelDareFeedback.className = "answer-feedback bad";
+  if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex >= x24Names.length) {
+    x25.textContent = payloadText(activityTwoPayload?.selectTeam);
+    x25.className = "answer-feedback bad";
     return;
   }
 
   const teamKey = `team${teamIndex + 1}`;
-  const teamName = intelDareTeamNames[teamIndex];
-  const rewardRef = bridgeRef(`intelDareBonus/teamRewards/${teamKey}`);
-  const acceptButton = el("acceptIntelDare");
+  const teamName = x24Names[teamIndex];
+  const cfg = x1("e01");
+  if (!cfg) return;
+  const rewardRef = bridgeRef(`${cfg.r}/teamRewards/${teamKey}`);
+  const acceptButton = el("x27");
 
   acceptButton.disabled = true;
   acceptButton.textContent = payloadText(activityTwoPayload?.processing);
@@ -795,21 +825,21 @@ el("acceptIntelDare")?.addEventListener("click", async () => {
       return {
         teamName,
         unlockedAt: Date.now(),
-        source: "p02"
+        source: cfg.s
       };
     });
 
-    intelDareForm.classList.add("hidden");
-    intelDareSuccess.classList.remove("hidden");
+    x22.classList.add("hidden");
+    x23.classList.remove("hidden");
 
     if (result.committed && firstUnlock) {
-      el("intelDareSuccessText").textContent = payloadTemplate(activityTwoPayload.successNew, { team: teamName });
+      el("x23Text").textContent = payloadTemplate(activityTwoPayload.successNew, { team: teamName });
     } else {
-      el("intelDareSuccessText").textContent = payloadTemplate(activityTwoPayload.successRepeat, { team: teamName });
+      el("x23Text").textContent = payloadTemplate(activityTwoPayload.successRepeat, { team: teamName });
     }
   } catch (error) {
-    intelDareFeedback.textContent = payloadText(activityTwoPayload?.unavailable);
-    intelDareFeedback.className = "answer-feedback bad";
+    x25.textContent = payloadText(activityTwoPayload?.unavailable);
+    x25.className = "answer-feedback bad";
   } finally {
     acceptButton.disabled = false;
     acceptButton.textContent = payloadText(activityTwoPayload?.acceptButton);
@@ -823,10 +853,10 @@ onValue(bridgeRef("settings/teamCount"), snapshot => {
 populateIntelDareTeams(DEFAULT_TEAM_COUNT);
 
 window.addEventListener("bridge-language-change", () => {
-  if (activityOnePayload && !hiddenBonusModal?.classList.contains("hidden")) {
+  if (activityOnePayload && !x11?.classList.contains("hidden")) {
     renderActivityOnePayload(activityOnePayload);
   }
-  if (activityTwoPayload && !intelDareModal?.classList.contains("hidden")) {
+  if (activityTwoPayload && !x21?.classList.contains("hidden")) {
     renderActivityTwoPayload(activityTwoPayload);
   }
   const spiritPayload = sessionPayloads.get("p05");
@@ -834,11 +864,11 @@ window.addEventListener("bridge-language-change", () => {
     teamSpiritButton.textContent = payloadText(spiritPayload.readyLabel);
   }
   const revealPayload = sessionPayloads.get("p07");
-  const reveal = el("bonusGameReveal");
+  const reveal = el("e07");
   if (revealPayload && reveal && !reveal.classList.contains("hidden")) {
-    reveal.querySelector(".bonus-label").textContent = payloadText(revealPayload.revealLabel);
+    reveal.querySelector(".x-c03").textContent = payloadText(revealPayload.revealLabel);
     reveal.querySelector("h3").textContent = payloadText(revealPayload.revealTitle);
-    reveal.querySelector(".bonus-game-button").textContent = payloadText(revealPayload.revealButton);
+    reveal.querySelector(".x-c04").textContent = payloadText(revealPayload.revealButton);
   }
 });
 
@@ -997,11 +1027,9 @@ onValue(bridgeRef("settings/teamCount"), snapshot => {
 renderParticipantStrengthResults();
 
 
-// Hidden Interactive Mission Setup optional interaction:
-// tap/click the red LOAD block three times to overload and break the demo bridge.
-const missionLoadBlock = el("missionLoadBlock");
-const missionBridgeDeck = el("missionBridgeDeck");
-const bridgeBreakModal = el("bridgeBreakModal");
+const e02 = el("e02");
+const x31 = el("x31");
+const x32 = el("x32");
 let missionLoadTapCount = 0;
 let missionLoadTapResetTimer = null;
 let bridgeBreakRunning = false;
@@ -1011,77 +1039,81 @@ function resetMissionBridgeBreak() {
   missionLoadTapCount = 0;
   clearTimeout(missionLoadTapResetTimer);
 
-  missionLoadBlock?.classList.remove("load-overload-grow", "load-overload-drop");
-  missionBridgeDeck?.classList.remove("bridge-shake", "bridge-broken");
+  e02?.classList.remove("load-overload-grow", "load-overload-drop");
+  x31?.classList.remove("bridge-shake", "bridge-broken");
   document.querySelector(".blueprint")?.classList.remove("diagram-overload");
 }
 
 async function openBridgeBreakSurprise() {
   if (bridgeBreakRunning) return;
-  const payload = await loadEventPayload("p06");
+  const cfg = x1("e02");
+  if (!cfg) return;
+  const payload = await loadEventPayload(cfg.p);
   if (!payload) return;
   bridgeBreakRunning = true;
 
-  bridgeBreakModal.querySelector(".bridge-break-icon").textContent = payload.icon || "";
-  bridgeBreakModal.querySelector(".bridge-break-label").textContent = payloadText(payload.label);
-  el("bridgeBreakTitle").textContent = payloadText(payload.title);
-  bridgeBreakModal.querySelector("p").textContent = payloadText(payload.copy);
-  el("closeBridgeBreak").textContent = payloadText(payload.button);
+  x32.querySelector(".x-c34").textContent = payload.icon || "";
+  x32.querySelector(".x-c35").textContent = payloadText(payload.label);
+  el("x33").textContent = payloadText(payload.title);
+  x32.querySelector("p").textContent = payloadText(payload.copy);
+  el("x34").textContent = payloadText(payload.button);
 
   const diagram = document.querySelector(".blueprint");
   diagram?.classList.add("diagram-overload");
-  missionLoadBlock?.classList.add("load-overload-grow");
-  missionBridgeDeck?.classList.add("bridge-shake");
+  e02?.classList.add("load-overload-grow");
+  x31?.classList.add("bridge-shake");
 
   setTimeout(() => {
-    missionLoadBlock?.classList.remove("load-overload-grow");
-    missionLoadBlock?.classList.add("load-overload-drop");
-    missionBridgeDeck?.classList.remove("bridge-shake");
-    missionBridgeDeck?.classList.add("bridge-broken");
+    e02?.classList.remove("load-overload-grow");
+    e02?.classList.add("load-overload-drop");
+    x31?.classList.remove("bridge-shake");
+    x31?.classList.add("bridge-broken");
   }, 650);
 
   setTimeout(() => {
-    bridgeBreakModal?.classList.remove("hidden");
-    bridgeBreakModal?.classList.add("bridge-break-visible");
+    x32?.classList.remove("hidden");
+    x32?.classList.add("x-c33");
   }, 1050);
 }
 
 function registerMissionLoadTap(event) {
   if (bridgeBreakRunning) return;
+  const cfg = x1("e02");
+  if (!cfg) return;
   event.preventDefault();
 
   missionLoadTapCount += 1;
-  missionLoadBlock?.classList.remove("load-tap-bounce");
-  void missionLoadBlock?.getBoundingClientRect();
-  missionLoadBlock?.classList.add("load-tap-bounce");
+  e02?.classList.remove("load-tap-bounce");
+  void e02?.getBoundingClientRect();
+  e02?.classList.add("load-tap-bounce");
 
   clearTimeout(missionLoadTapResetTimer);
   missionLoadTapResetTimer = setTimeout(() => {
     missionLoadTapCount = 0;
-  }, 1800);
+  }, cfg.w);
 
-  if (missionLoadTapCount >= 3) {
+  if (missionLoadTapCount >= cfg.n) {
     missionLoadTapCount = 0;
     clearTimeout(missionLoadTapResetTimer);
     openBridgeBreakSurprise();
   }
 }
 
-missionLoadBlock?.addEventListener("click", registerMissionLoadTap);
-missionLoadBlock?.addEventListener("keydown", event => {
+e02?.addEventListener("click", registerMissionLoadTap);
+e02?.addEventListener("keydown", event => {
   if (event.key === "Enter" || event.key === " ") registerMissionLoadTap(event);
 });
 
-el("closeBridgeBreak")?.addEventListener("click", () => {
-  bridgeBreakModal?.classList.add("hidden");
-  bridgeBreakModal?.classList.remove("bridge-break-visible");
+el("x34")?.addEventListener("click", () => {
+  x32?.classList.add("hidden");
+  x32?.classList.remove("x-c33");
   resetMissionBridgeBreak();
 });
 
-bridgeBreakModal?.addEventListener("click", event => {
-  if (event.target !== bridgeBreakModal) return;
-  bridgeBreakModal.classList.add("hidden");
-  bridgeBreakModal.classList.remove("bridge-break-visible");
+x32?.addEventListener("click", event => {
+  if (event.target !== x32) return;
+  x32.classList.add("hidden");
+  x32.classList.remove("x-c33");
   resetMissionBridgeBreak();
 });
 
@@ -1096,7 +1128,7 @@ let momentPanelPreviousFocus = null;
 
 function closeMomentPanelEgg() {
   momentPanelModal?.classList.add("hidden");
-  momentPanelModal?.classList.remove("moment-panel-visible", "coffee", "gap-friendly", "team-spirit");
+  momentPanelModal?.classList.remove("moment-panel-visible", "x-k1", "x-k2", "x-k3");
   const cleanup = momentPanelCleanup;
   momentPanelCleanup = null;
   cleanup?.();
@@ -1129,7 +1161,7 @@ document.addEventListener("keydown", event => {
   }
 });
 
-function createRepeatedTapTrigger(element, requiredTaps, windowMs, onTrigger) {
+function createRepeatedTapTrigger(element, code, onTrigger) {
   let tapCount = 0;
   let firstTapTime = 0;
   let resetTimer = null;
@@ -1142,6 +1174,10 @@ function createRepeatedTapTrigger(element, requiredTaps, windowMs, onTrigger) {
   }
 
   function register(event) {
+    const cfg = x1(code);
+    if (!cfg) return;
+    const requiredTaps = cfg.n;
+    const windowMs = cfg.w;
     event?.preventDefault();
     const now = Date.now();
     if (!firstTapTime || now - firstTapTime > windowMs) {
@@ -1167,9 +1203,9 @@ function createRepeatedTapTrigger(element, requiredTaps, windowMs, onTrigger) {
   return { reset };
 }
 
-const missionCoffeeCanLeft = el("missionCoffeeCanLeft");
-const missionCoffeeCanRight = el("missionCoffeeCanRight");
-const missionGapIndicator = el("missionGapIndicator");
+const e03a = el("e03a");
+const e03b = el("e03b");
+const e04 = el("e04");
 const missionBlueprint = document.querySelector(".blueprint");
 let leftCoffeeTapTrigger = null;
 let rightCoffeeTapTrigger = null;
@@ -1177,48 +1213,52 @@ let gapTapTrigger = null;
 let gapPopupTimer = null;
 
 async function triggerCoffeeCanDisturbance(can, tapTrigger) {
-  const payload = await loadEventPayload("p03");
+  const cfg = x1("e03");
+  if (!cfg) return;
+  const payload = await loadEventPayload(cfg.p);
   if (!payload) return;
-  can?.classList.add("coffee-can-disturbed");
+  can?.classList.add("x-c41");
   openMomentPanelEgg({
-    kind: "coffee",
+    kind: "x-k1",
     icon: payload.icon || "",
     title: payloadText(payload.title),
     copy: payloadText(payload.copy),
     button: payloadText(payload.button),
     onClose: () => {
-      can?.classList.remove("coffee-can-disturbed");
+      can?.classList.remove("x-c41");
       tapTrigger?.reset();
     }
   });
 }
 
-leftCoffeeTapTrigger = createRepeatedTapTrigger(missionCoffeeCanLeft, 4, 2000, () => {
-  triggerCoffeeCanDisturbance(missionCoffeeCanLeft, leftCoffeeTapTrigger);
+leftCoffeeTapTrigger = createRepeatedTapTrigger(e03a, "e03", () => {
+  triggerCoffeeCanDisturbance(e03a, leftCoffeeTapTrigger);
 });
-rightCoffeeTapTrigger = createRepeatedTapTrigger(missionCoffeeCanRight, 4, 2000, () => {
-  triggerCoffeeCanDisturbance(missionCoffeeCanRight, rightCoffeeTapTrigger);
+rightCoffeeTapTrigger = createRepeatedTapTrigger(e03b, "e03", () => {
+  triggerCoffeeCanDisturbance(e03b, rightCoffeeTapTrigger);
 });
 
 function resetGapWarning() {
   clearTimeout(gapPopupTimer);
-  missionGapIndicator?.classList.remove("gap-violation-active");
-  missionCoffeeCanLeft?.classList.remove("gap-can-inward");
-  missionCoffeeCanRight?.classList.remove("gap-can-inward");
-  missionBlueprint?.classList.remove("gap-diagram-shake");
+  e04?.classList.remove("x-c44");
+  e03a?.classList.remove("x-c43");
+  e03b?.classList.remove("x-c43");
+  missionBlueprint?.classList.remove("x-c45");
   gapTapTrigger?.reset();
 }
 
 async function triggerGapWarning() {
-  const payload = await loadEventPayload("p04");
+  const cfg = x1("e04");
+  if (!cfg) return;
+  const payload = await loadEventPayload(cfg.p);
   if (!payload) return;
-  missionGapIndicator?.classList.add("gap-violation-active");
-  missionCoffeeCanLeft?.classList.add("gap-can-inward");
-  missionCoffeeCanRight?.classList.add("gap-can-inward");
-  missionBlueprint?.classList.add("gap-diagram-shake");
+  e04?.classList.add("x-c44");
+  e03a?.classList.add("x-c43");
+  e03b?.classList.add("x-c43");
+  missionBlueprint?.classList.add("x-c45");
 
   openMomentPanelEgg({
-    kind: "gap-friendly",
+    kind: "x-k2",
     icon: payload.icon || "",
     title: payloadText(payload.title),
     copy: payloadText(payload.copyFirst),
@@ -1227,12 +1267,12 @@ async function triggerGapWarning() {
   });
 
   gapPopupTimer = setTimeout(() => {
-    if (!momentPanelModal?.classList.contains("gap-friendly")) return;
+    if (!momentPanelModal?.classList.contains("x-k2")) return;
     momentPanelCopy.textContent = payloadText(payload.copySecond);
-  }, 1000);
+  }, cfg.d);
 }
 
-gapTapTrigger = createRepeatedTapTrigger(missionGapIndicator, 3, 2000, triggerGapWarning);
+gapTapTrigger = createRepeatedTapTrigger(e04, "e04", triggerGapWarning);
 
 
 // v1.7.28 bilingual workflow diagram with full-screen zoom and drag support
