@@ -12,6 +12,12 @@
   <div class="login-card">
     <div class="brand"><div class="brand-icon">💡</div><div><h1>Innovation Judge</h1><p>HK GIC ENGAGEMENT HUB</p></div></div>
     <p class="small">Dedicated scoring page for participating managers.</p>
+    <label class="label" for="judgeIdentity">Login name</label>
+    <select id="judgeIdentity">
+      <option value="">Select your login name</option>
+      <option>DC</option><option>EL</option><option>HL</option><option>KP</option><option>OL</option>
+      <option>PW</option><option>RL</option><option>THC</option><option>Other 1</option><option>Other 2</option>
+    </select>
     <label class="label" for="judgePassword">Access password</label>
     <input id="judgePassword" type="password" placeholder="Enter password">
     <button id="judgeLoginButton" class="primary">Open Innovation Scoring</button>
@@ -26,9 +32,8 @@
   </header>
 
   <section class="judge-intro">
-    <label class="label" for="judgeName">Your name</label>
-    <input id="judgeName" maxlength="40" placeholder="Enter your name, e.g. Ryan">
-    <p class="small">Your name identifies your submission. Saving again with the same name updates your previous scores.</p>
+    <strong>Signed in as <span id="activeJudgeName"></span></strong>
+    <p class="small">Each team score saves automatically. You can safely move between teams after the save indicator confirms.</p>
   </section>
 
   <div id="innovationCards" class="judge-card-grid"></div>
@@ -38,10 +43,10 @@
       <strong id="innovationCompletion">0 teams scored</strong>
       <p class="small">The MC page shows the live average across all managers.</p>
     </div>
-    <button id="saveInnovationButton" class="primary">Submit My Innovation Scores</button>
+    <strong id="innovationAutosaveStatus">Ready to autosave</strong>
   </section>
   <div id="innovationMessage" class="msg judge-page-message"></div>
 </main>
-<script type="module" src="innovation-judge.js?v=1.6.3"></script>
+<script type="module" src="innovation-judge.js?v=1.7.1"></script>
 </body>
 </html>

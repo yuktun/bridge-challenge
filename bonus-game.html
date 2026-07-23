@@ -119,7 +119,10 @@
                         <select id="teamSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-xs text-white focus:outline-none focus:border-orange-500">
                             <option value="">Loading teams…</option>
                         </select>
+                        <label id="playerNameLabel" for="playerNameInput" class="block text-[10px] font-bold uppercase tracking-widest text-amber-400 mt-4 mb-2">Your Name / Alias</label>
+                        <input id="playerNameInput" type="text" placeholder="Your Name / Alias" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-xs text-white focus:outline-none focus:border-orange-500" maxlength="15" autocomplete="nickname">
                         <p id="teamSelectStatus" class="text-[10px] leading-relaxed text-slate-400 mt-3"></p>
+                        <p id="unlockScoreReminder" class="text-[10px] leading-relaxed text-amber-300/90 mt-2">Reminder: the MC may lower the unlock score near the end of the event.</p>
                     </div>
 
                     <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 text-left space-y-3 max-w-xs mx-auto">
@@ -155,10 +158,7 @@
                         <h3 class="text-xs font-bold text-slate-300 flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-paper-plane text-amber-500"></i> Submit to Event Leaderboard
                         </h3>
-                        <div class="flex gap-2">
-                            <input id="playerNameInput" type="text" placeholder="Your Name/Alias" class="bg-slate-950 border border-slate-700/50 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 flex-1 min-w-0" maxlength="15">
-                            <button id="submitScoreBtn" class="bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition duration-150 shrink-0">Submit</button>
-                        </div>
+                        <button id="submitScoreBtn" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition duration-150">Submit</button>
                         <p id="submitStatus" class="text-[10px] text-slate-500"></p>
                     </div>
                 </div>
@@ -414,14 +414,12 @@
 
             // Reset the score-submission form for the next attempt.
             const retrySubmitButton = document.getElementById('submitScoreBtn');
-            const retryPlayerName = document.getElementById('playerNameInput');
             const retrySubmitStatus = document.getElementById('submitStatus');
             const retryRewardMessage = document.getElementById('rewardMessage');
 
             retrySubmitButton.disabled = false;
             retrySubmitButton.textContent = 'Submit';
             retrySubmitButton.classList.remove('opacity-50', 'pointer-events-none');
-            retryPlayerName.value = '';
             retrySubmitStatus.textContent = '';
             retryRewardMessage.className = 'hidden max-w-xs mx-auto rounded-xl border p-4 text-left';
 
@@ -540,13 +538,21 @@
         // Trigger welcome dismissal & starts game flow
         document.getElementById('startGameBtn').addEventListener('click', () => {
             const teamSelect = document.getElementById('teamSelect');
+            const playerName = document.getElementById('playerNameInput');
             if (!teamSelect.value) {
                 const status = document.getElementById('teamSelectStatus');
                 status.textContent = 'Please select your team before starting.';
                 status.className = 'text-[9px] text-rose-400 mt-2';
                 return;
             }
-            document.getElementById('selectedTeamLabel').textContent = `Team: ${teamSelect.options[teamSelect.selectedIndex].text}`;
+            if (!playerName.value.trim()) {
+                const status = document.getElementById('teamSelectStatus');
+                status.textContent = 'Please enter your name or alias before starting.';
+                status.className = 'text-[9px] text-rose-400 mt-2';
+                playerName.focus();
+                return;
+            }
+            document.getElementById('selectedTeamLabel').textContent = `${playerName.value.trim()} · ${teamSelect.options[teamSelect.selectedIndex].text}`;
             UI.welcome.classList.add('hidden');
             resetGame();
         });
@@ -1022,6 +1028,15 @@ function renderEventGamePayload() {
     startButton.disabled = false;
 }
 
+function renderEntryLanguage() {
+  const chinese = window.bridgeI18n?.language === "zh-HK";
+  document.getElementById("playerNameLabel").textContent = chinese ? "你的名稱／暱稱" : "Your Name / Alias";
+  document.getElementById("playerNameInput").placeholder = chinese ? "輸入名稱或暱稱" : "Your Name / Alias";
+  document.getElementById("unlockScoreReminder").textContent = chinese
+    ? "提示：活動接近尾聲時，MC 可能會降低解鎖分數。"
+    : "Reminder: the MC may lower the unlock score near the end of the event.";
+}
+
 async function initializeEventGame() {
   try {
     const enabled = (await get(ref(firebaseDb, `${BRIDGE_PATH}/config/hiddenContentEnabled`))).val() === true;
@@ -1062,8 +1077,10 @@ const closeLeaderboardButton = document.getElementById("closeLeaderboardBtn");
 
 window.addEventListener("bridge-language-change", () => {
   renderEventGamePayload();
+  renderEntryLanguage();
   reconcileLastScore();
 });
+renderEntryLanguage();
 
 function openLeaderboard() {
   renderLeaderboard();

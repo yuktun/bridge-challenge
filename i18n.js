@@ -74,7 +74,7 @@ const translations = {
   "Place a 2.5 kg object on top": "在紙橋上放置一件 2.5 kg 物件",
   "Pass this final stage to earn another 15 points.": "通過最後階段可再獲得 15 分。",
   "A team keeps all points earned from earlier successful stages, even if it fails a later stage.": "即使未能通過較後階段，團隊仍可保留之前成功階段所得的全部分數。",
-  "Communication, participation and task sharing. Judged by Kitty.": "按溝通、參與度及工作分配評分，由 Kitty 評審。",
+  "Communication, participation and task sharing. Judged by KC.": "按溝通、參與度及工作分配評分，由 KC 評審。",
   "Creativity and effective use of the provided materials. Judged by all managers.": "按創意及能否有效運用指定材料評分，由所有 Managers 評審。",
   "WAITING FOR MC": "等待 MC",
   "Strategy & Planning": "策略與規劃",

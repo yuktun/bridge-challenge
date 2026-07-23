@@ -64,7 +64,7 @@ async function saveTeam(index) {
 
   try {
     await update(teamworkRef, {
-      judgeName: "Kitty",
+      judgeName: "KC",
       [`scores/team${index + 1}`]: values[index],
       submittedAt: serverTimestamp()
     });
@@ -178,7 +178,7 @@ let latestTeamwork = null;
 let latestStrength = {};
 let latestInnovation = {};
 
-function compareKittyRows(a, b) {
+function compareKCRows(a, b) {
   return (
     (b.total - a.total) ||
     ((Number.isFinite(b.strength) ? b.strength : -1) - (Number.isFinite(a.strength) ? a.strength : -1)) ||
@@ -187,7 +187,7 @@ function compareKittyRows(a, b) {
   );
 }
 
-function sameKittyRank(a, b) {
+function sameKCRank(a, b) {
   return (
     a &&
     b &&
@@ -197,7 +197,7 @@ function sameKittyRank(a, b) {
   );
 }
 
-function renderKittyBoard() {
+function renderKCBoard() {
   const body = el("kittyResultsBody");
   if (!body) return;
 
@@ -233,7 +233,7 @@ function renderKittyBoard() {
     };
   });
 
-  const scoredRows = rows.filter(row => row.any).sort(compareKittyRows);
+  const scoredRows = rows.filter(row => row.any).sort(compareKCRows);
   const unscoredRows = rows.filter(row => !row.any);
   const displayRows = [...scoredRows, ...unscoredRows];
 
@@ -243,7 +243,7 @@ function renderKittyBoard() {
   body.innerHTML = displayRows.map((row, displayIndex) => {
     let rank = null;
     if (row.any) {
-      if (sameKittyRank(row, previous)) {
+      if (sameKCRank(row, previous)) {
         rank = previousRank;
       } else {
         rank = displayIndex + 1;
@@ -285,20 +285,20 @@ onValue(ref(db, `${BRIDGE_PATH}/settings/teamCount`), snapshot => {
     updateCompletion();
   }
 
-  renderKittyBoard();
+  renderKCBoard();
 });
 
 onValue(teamworkRef, snapshot => {
   latestTeamwork = snapshot.val() || null;
-  renderKittyBoard();
+  renderKCBoard();
 });
 
 onValue(ref(db, `${BRIDGE_PATH}/scores/strength`), snapshot => {
   latestStrength = snapshot.val() || {};
-  renderKittyBoard();
+  renderKCBoard();
 });
 
 onValue(ref(db, `${BRIDGE_PATH}/scores/innovation`), snapshot => {
   latestInnovation = snapshot.val() || {};
-  renderKittyBoard();
+  renderKCBoard();
 });

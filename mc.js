@@ -492,7 +492,7 @@ function renderJudgingResults() {
   );
 
   el("teamworkStatusBadge").textContent =
-    teamworkReady ? "Teamwork: submitted by Kitty" : "Teamwork: not complete";
+    teamworkReady ? "Teamwork: submitted by KC" : "Teamwork: not complete";
   el("teamworkStatusBadge").className = `connection ${teamworkReady ? "online" : ""}`;
 
   el("innovationStatusBadge").textContent =
@@ -667,6 +667,48 @@ function renderBonusUnlockScore(value) {
   }
 }
 
+let currentBonusUnlockScore = DEFAULT_BONUS_UNLOCK_SCORE;
+let bonusQualificationReview = null;
+
+async function reviewLeaderboardForBonusQualification(score = currentBonusUnlockScore) {
+  if (bonusQualificationReview) {
+    await bonusQualificationReview;
+    return reviewLeaderboardForBonusQualification(score);
+  }
+  bonusQualificationReview = (async () => {
+    const requiredScore = normalizeBonusUnlockScore(score);
+    const bestByTeam = {};
+    Object.values(bonusLeaderboard || {}).forEach(entry => {
+      const teamKey = String(entry?.teamKey || "").trim();
+      const entryScore = Number(entry?.score);
+      if (!teamKey || !Number.isFinite(entryScore) || entryScore < requiredScore) return;
+      if (!bestByTeam[teamKey] || entryScore > Number(bestByTeam[teamKey].score)) bestByTeam[teamKey] = entry;
+    });
+    let newlyQualified = 0;
+    for (const [teamKey, entry] of Object.entries(bestByTeam)) {
+      const result = await runTransaction(bridgeRef(`bonusGame/teamRewards/${teamKey}`), current => {
+        if (current) return;
+        return {
+          teamKey,
+          teamName: entry.teamName || teamKey,
+          playerName: entry.playerName || "Anonymous",
+          score: Number(entry.score),
+          requiredScore,
+          unlockedAt: serverTimestamp(),
+          qualificationSource: "mcUnlockScoreReview"
+        };
+      });
+      if (result.committed) newlyQualified += 1;
+    }
+    return newlyQualified;
+  })();
+  try {
+    return await bonusQualificationReview;
+  } finally {
+    bonusQualificationReview = null;
+  }
+}
+
 el("updateBonusUnlockScore")?.addEventListener("click", async () => {
   const input = el("bonusUnlockScoreInput");
   const raw = input?.value?.trim() || "";
@@ -693,9 +735,11 @@ el("updateBonusUnlockScore")?.addEventListener("click", async () => {
     button.disabled = true;
     await set(bridgeRef("settings/bonusGameUnlockScore"), score);
     renderBonusUnlockScore(score);
+    const newlyQualified = await reviewLeaderboardForBonusQualification(score);
     showMessage(
       "bonusUnlockScoreMessage",
-      `Unlock score updated to ${score}. 解鎖分數已更新為 ${score}。`,
+      `Unlock score updated to ${score}. Leaderboard checked: ${newlyQualified} new team${newlyQualified === 1 ? "" : "s"} qualified. ` +
+        `解鎖分數已更新，排行榜亦已重新檢查。`,
       "ok"
     );
   } catch (error) {
@@ -706,7 +750,11 @@ el("updateBonusUnlockScore")?.addEventListener("click", async () => {
 });
 
 onValue(bridgeRef("settings/bonusGameUnlockScore"), snapshot => {
-  renderBonusUnlockScore(snapshot.val());
+  currentBonusUnlockScore = normalizeBonusUnlockScore(snapshot.val());
+  renderBonusUnlockScore(currentBonusUnlockScore);
+  reviewLeaderboardForBonusQualification(currentBonusUnlockScore).catch(error => {
+    console.error("Unable to review leaderboard qualification:", error);
+  });
 });
 
 
@@ -772,6 +820,9 @@ function renderBonusAdmin() {
 onValue(bridgeRef("bonusGame/leaderboard"), snapshot => {
   bonusLeaderboard = snapshot.val() || {};
   renderBonusAdmin();
+  reviewLeaderboardForBonusQualification(currentBonusUnlockScore).catch(error => {
+    console.error("Unable to review leaderboard qualification:", error);
+  });
 });
 
 onValue(bridgeRef("bonusGame/teamRewards"), snapshot => {

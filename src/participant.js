@@ -27,8 +27,10 @@ async function loadEventPayload(id) {
 }
 
 function payloadText(value) {
-  if (!value || typeof value !== "object") return String(value || "");
-  return String(value[window.bridgeI18n?.language === "zh-HK" ? "zh" : "en"] || value.en || "");
+  const text = !value || typeof value !== "object"
+    ? String(value || "")
+    : String(value[window.bridgeI18n?.language === "zh-HK" ? "zh" : "en"] || value.en || "");
+  return text.replaceAll("Kitty", "KC");
 }
 
 function payloadTemplate(value, replacements = {}) {
