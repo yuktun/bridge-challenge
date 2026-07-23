@@ -875,10 +875,10 @@ onValue(bridgeRef("hiddenBonus/teamRewards"), snapshot => {
 });
 
 el("clearHiddenBonusButton")?.addEventListener("click", async () => {
-  if (!confirm("Clear all Activity 1 records?")) return;
+  if (!confirm("Clear all Activity 2 records?")) return;
   try {
     await set(bridgeRef("hiddenBonus"), null);
-    showMessage("hiddenBonusAdminMessage", "Activity 1 records cleared.", "ok");
+    showMessage("hiddenBonusAdminMessage", "Activity 2 records cleared.", "ok");
   } catch (error) {
     showMessage("hiddenBonusAdminMessage", friendlyError(error), "err", true);
   }
@@ -918,11 +918,11 @@ onValue(bridgeRef("intelDareBonus/teamRewards"), snapshot => {
 });
 
 el("clearIntelDareButton")?.addEventListener("click", async () => {
-  if (!confirm("Clear all Activity 2 records?")) return;
+  if (!confirm("Clear all Activity 1 records?")) return;
 
   try {
     await set(bridgeRef("intelDareBonus"), null);
-    showMessage("intelDareAdminMessage", "Activity 2 records cleared.", "ok");
+    showMessage("intelDareAdminMessage", "Activity 1 records cleared.", "ok");
   } catch (error) {
     showMessage("intelDareAdminMessage", friendlyError(error), "err", true);
   }

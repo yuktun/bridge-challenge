@@ -202,8 +202,9 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 .score-output{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:17px;font-weight:950;color:#f8fafc;background:#020617;border:1px solid #263247;border-radius:10px;padding:7px 9px;white-space:nowrap}
 .score-range{width:100%;margin:2px 0 12px;accent-color:#6366f1}
 .teamwork-range{accent-color:#38bdf8}.innovation-range{accent-color:#34d399}
-.identity-confirmation{margin-top:16px;padding:16px;border:1px solid rgba(99,102,241,.45);border-radius:14px;background:rgba(15,23,42,.94);text-align:center}
-.identity-confirmation p{margin:0 0 10px}.identity-confirmation strong{color:#fbbf24;font-size:1.25rem}
+.identity-confirmation{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,.78);backdrop-filter:blur(10px)}
+.identity-confirmation-card{width:min(420px,100%);padding:24px;border:1px solid rgba(99,102,241,.55);border-radius:20px;background:#0f172a;box-shadow:0 24px 80px rgba(0,0,0,.55);text-align:center}
+.identity-confirmation p{margin:0 0 12px}.identity-confirmation strong{color:#fbbf24;font-size:1.4rem}
 .identity-confirmation-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .identity-confirmation-actions button{margin:0}
 .quick-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
