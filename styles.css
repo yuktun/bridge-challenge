@@ -316,7 +316,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 @media(max-width:760px){.award-control-grid{grid-template-columns:1fr}}
 
 
-/* v1.7 secret bonus-game reveal */
+/* Optional activity reveal */
 .bonus-game-reveal{
   margin-top:18px;padding:20px 16px;text-align:center;border-radius:20px;
   border:1px solid rgba(245,158,11,.55);
@@ -346,7 +346,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 @media(max-width:620px){.bonus-admin-entry{grid-template-columns:1fr auto}}
 
 
-/* v1.7.7 hidden Design Lab bonus */
+/* Optional activity modal */
 #hint-redlines.unlocked .design-visual{cursor:pointer}
 .hidden-bonus-overlay{
   position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;
@@ -394,7 +394,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 }
 
 
-/* v1.7.8 Intel Innovation triple-tap dare */
+/* Optional activity presentation */
 .intel-innovation-secret{cursor:pointer;user-select:none;-webkit-user-select:none}
 .intel-innovation-secret:active{transform:scale(.995)}
 .intel-dare-overlay{
@@ -443,7 +443,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 }
 
 
-/* v1.7.11 dedicated Super Bonus announcement */
+/* Dedicated completion announcement */
 .super-bonus-announcement{
   margin:10px 16px 0;padding:14px;border-radius:14px;
   border:1px solid rgba(52,211,153,.45);
@@ -460,7 +460,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 .super-bonus-preview h3{margin:0 0 4px;font-size:13px}
 
 
-/* v1.7.12 spacing below dedicated Super Bonus announcement */
+/* Completion announcement spacing */
 .super-bonus-announcement{
   margin-bottom:18px;
 }
@@ -703,7 +703,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 }
 
 
-/* v1.7.18 LOAD triple-tap bridge-break Easter egg */
+/* Interactive diagram presentation */
 #missionLoadBlock{transform-box:fill-box;transform-origin:center;cursor:pointer}
 #missionBridgeDeck{transform-box:fill-box;transform-origin:center}
 
@@ -778,7 +778,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 }
 
 
-/* v1.7.20 visual-only mission and checklist Easter eggs */
+/* v1.7.20 visual-only mission and checklist optional interactions */
 .mission-can,.coffee-steam,#missionGapIndicator{transform-box:fill-box;transform-origin:center}
 .coffee-steam{opacity:0;pointer-events:none;transition:opacity .16s}
 .coffee-steam text{fill:#fbbf24;font-size:10px;text-anchor:middle}
@@ -809,34 +809,34 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
   70%{transform:translateX(2px)}
 }
 
-.visual-easter-overlay{
+.moment-panel-overlay{
   position:fixed;inset:0;z-index:1500;display:grid;place-items:center;padding:18px;
   background:rgba(2,6,23,.86);backdrop-filter:blur(11px)
 }
-.visual-easter-modal{
+.moment-panel-modal{
   width:min(430px,100%);padding:25px;border-radius:24px;text-align:center;
   border:2px solid rgba(129,140,248,.58);
   background:radial-gradient(circle at 50% 0,rgba(99,102,241,.22),transparent 42%),linear-gradient(145deg,#172033,#0f172a);
   box-shadow:0 0 0 6px rgba(99,102,241,.07),0 30px 90px rgba(0,0,0,.65)
 }
-.visual-easter-visible .visual-easter-modal{animation:visualEasterPop .52s cubic-bezier(.18,.9,.22,1.18)}
-@keyframes visualEasterPop{
+.moment-panel-visible .moment-panel-modal{animation:momentPanelPop .52s cubic-bezier(.18,.9,.22,1.18)}
+@keyframes momentPanelPop{
   from{opacity:0;transform:scale(.65) rotate(-2deg)}
   to{opacity:1;transform:scale(1) rotate(0)}
 }
-.visual-easter-icon{font-size:38px;letter-spacing:.12em}
-.visual-easter-modal h2{margin:12px 0 8px;font-size:20px}
-.visual-easter-modal p{margin:0;color:#cbd5e1;font-size:12px;line-height:1.7;white-space:pre-line}
-.visual-easter-modal button{
+.moment-panel-icon{font-size:38px;letter-spacing:.12em}
+.moment-panel-modal h2{margin:12px 0 8px;font-size:20px}
+.moment-panel-modal p{margin:0;color:#cbd5e1;font-size:12px;line-height:1.7;white-space:pre-line}
+.moment-panel-modal button{
   width:100%;margin-top:16px;padding:13px;border:0;border-radius:13px;
   background:linear-gradient(90deg,#6366f1,#2563eb);color:#fff;font-weight:950
 }
-.visual-easter-overlay.coffee .visual-easter-modal{border-color:rgba(245,158,11,.65);background:radial-gradient(circle at 50% 0,rgba(245,158,11,.22),transparent 42%),linear-gradient(145deg,#261d13,#0f172a)}
-.visual-easter-overlay.coffee button{background:linear-gradient(90deg,#d97706,#92400e)}
-.visual-easter-overlay.gap-friendly .visual-easter-modal{border-color:rgba(52,211,153,.72);background:radial-gradient(circle at 50% 0,rgba(16,185,129,.25),transparent 44%),linear-gradient(145deg,#0b2a24,#0f172a)}
-.visual-easter-overlay.gap-friendly button{background:linear-gradient(90deg,#10b981,#059669)}
-.visual-easter-overlay.team-spirit .visual-easter-modal{border-color:rgba(251,146,60,.7);background:radial-gradient(circle at 50% 0,rgba(249,115,22,.28),transparent 44%),linear-gradient(145deg,#29170f,#0f172a)}
-.visual-easter-overlay.team-spirit button{background:linear-gradient(90deg,#f97316,#db2777)}
+.moment-panel-overlay.coffee .moment-panel-modal{border-color:rgba(245,158,11,.65);background:radial-gradient(circle at 50% 0,rgba(245,158,11,.22),transparent 42%),linear-gradient(145deg,#261d13,#0f172a)}
+.moment-panel-overlay.coffee button{background:linear-gradient(90deg,#d97706,#92400e)}
+.moment-panel-overlay.gap-friendly .moment-panel-modal{border-color:rgba(52,211,153,.72);background:radial-gradient(circle at 50% 0,rgba(16,185,129,.25),transparent 44%),linear-gradient(145deg,#0b2a24,#0f172a)}
+.moment-panel-overlay.gap-friendly button{background:linear-gradient(90deg,#10b981,#059669)}
+.moment-panel-overlay.team-spirit .moment-panel-modal{border-color:rgba(251,146,60,.7);background:radial-gradient(circle at 50% 0,rgba(249,115,22,.28),transparent 44%),linear-gradient(145deg,#29170f,#0f172a)}
+.moment-panel-overlay.team-spirit button{background:linear-gradient(90deg,#f97316,#db2777)}
 
 .team-spirit-control{
   margin:16px 0;padding:14px;border-radius:16px;text-align:center;
@@ -869,7 +869,7 @@ body.team-spirit-glow::after{animation:teamSpiritGlow .55s ease-in-out 5 alterna
 
 @media(prefers-reduced-motion:reduce){
   .coffee-can-disturbed,.coffee-can-disturbed .coffee-steam,.gap-violation-active,.gap-diagram-shake,
-  .visual-easter-visible .visual-easter-modal,.team-spirit-glow::after{animation:none!important}
+  .moment-panel-visible .moment-panel-modal,.team-spirit-glow::after{animation:none!important}
   .mission-can-left.gap-can-inward{transform:translateX(7px)}
   .mission-can-right.gap-can-inward{transform:translateX(-7px)}
   .team-spirit-effects span{

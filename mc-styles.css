@@ -279,7 +279,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 @media(max-width:760px){.award-control-grid{grid-template-columns:1fr}}
 
 
-/* v1.7 secret bonus-game reveal */
+/* Optional activity reveal */
 .bonus-game-reveal{
   margin-top:18px;padding:20px 16px;text-align:center;border-radius:20px;
   border:1px solid rgba(245,158,11,.55);
@@ -309,7 +309,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 @media(max-width:620px){.bonus-admin-entry{grid-template-columns:1fr auto}}
 
 
-/* v1.7.7 hidden Design Lab bonus */
+/* Optional activity modal */
 #hint-redlines.unlocked .design-visual{cursor:pointer}
 .hidden-bonus-overlay{
   position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;
@@ -357,7 +357,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 }
 
 
-/* v1.7.8 Intel Innovation triple-tap dare */
+/* Optional activity presentation */
 .intel-innovation-secret{cursor:pointer;user-select:none;-webkit-user-select:none}
 .intel-innovation-secret:active{transform:scale(.995)}
 .intel-dare-overlay{
@@ -406,7 +406,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 }
 
 
-/* v1.7.11 dedicated Super Bonus announcement */
+/* Dedicated completion announcement */
 .super-bonus-announcement{
   margin:10px 16px 0;padding:14px;border-radius:14px;
   border:1px solid rgba(52,211,153,.45);
@@ -423,7 +423,7 @@ input:focus,textarea:focus,select:focus{outline:3px solid rgba(99,102,241,.18);b
 .super-bonus-preview h3{margin:0 0 4px;font-size:13px}
 
 
-/* v1.7.12 spacing below dedicated Super Bonus announcement */
+/* Completion announcement spacing */
 .super-bonus-announcement{
   margin-bottom:18px;
 }
