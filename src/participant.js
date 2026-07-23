@@ -349,7 +349,9 @@ function updateChecklistProgress() {
       reveal.querySelector("h3").textContent = payloadText(payload.revealTitle);
       const gameLink = reveal.querySelector(".x-c04");
       gameLink.textContent = payloadText(payload.revealButton);
-      gameLink.href = b.u;
+      const destination = new URL(b.u, window.location.href);
+      destination.searchParams.set("build", "1.7.43");
+      gameLink.href = destination.href;
       gameLink.addEventListener("click", () => sessionStorage.setItem(b.k, "1"), { once:true });
       reveal.classList.remove("hidden");
       reveal.classList.add("x-c05");

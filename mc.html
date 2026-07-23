@@ -99,6 +99,25 @@
       <div id="settingsMessage" class="msg"></div>
     </section>
 
+    <section class="control-card event-settings-card">
+      <h2>Bonus Game Unlock Score <span class="small" lang="zh-Hant">／獎賞遊戲解鎖分數</span></h2>
+      <div class="control-row">
+        <div>
+          <label class="label" for="bonusUnlockScoreInput">Required score／所需分數</label>
+          <input id="bonusUnlockScoreInput" type="number" min="1" max="999" step="1" value="30" inputmode="numeric">
+        </div>
+        <div>
+          <label class="label">Current saved score／目前儲存分數</label>
+          <span id="bonusUnlockScoreStatus" class="connection">30 points</span>
+        </div>
+      </div>
+      <div class="button-row">
+        <button id="updateBonusUnlockScore" class="primary">Update Score／更新分數</button>
+      </div>
+      <p id="bonusUnlockScoreDescription" class="small">Teams must reach 30 points to unlock the bonus game.<br><span lang="zh-Hant">隊伍需要取得 30 分才能解鎖獎賞遊戲。</span></p>
+      <div id="bonusUnlockScoreMessage" class="msg"></div>
+    </section>
+
     <section class="control-card award-control-card">
       <div class="section-heading-row">
         <div>
@@ -269,6 +288,6 @@ window.addEventListener("load", () => {
 });
 </script>
 
-<script type="module" src="mc.js?v=1.7.40"></script>
+<script type="module" src="mc.js?v=1.7.43"></script>
 </body>
 </html>

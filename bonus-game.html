@@ -940,6 +940,18 @@ let currentLeaderboard = {};
 let currentRewards = {};
 let currentTeamNames = makeTeamNames(DEFAULT_TEAM_COUNT);
 let eventGamePayload = null;
+let requiredScore = 30;
+let lastScoreContext = null;
+let rewardEvaluationRunning = false;
+
+const normalizeRequiredScore = value => {
+  const normalized = typeof value === "string" && value.trim() !== ""
+    ? Number(value)
+    : value;
+  return Number.isInteger(normalized) && normalized > 0 && normalized <= 999
+    ? normalized
+    : 30;
+};
 
 const eventText = value => {
   if (!value || typeof value !== "object") return String(value || "");
@@ -951,13 +963,51 @@ const eventTemplate = (value, replacements = {}) => Object.entries(replacements)
   eventText(value)
 );
 
+const gameCopy = (en, zh) =>
+  window.bridgeI18n?.language === "zh-HK" ? zh : en;
+
+function renderScoreRequirement(currentScore = null) {
+  const status = document.getElementById("teamSelectStatus");
+  if (!status) return;
+  if (Number.isFinite(currentScore)) {
+    status.textContent = gameCopy(
+      `Current score: ${currentScore} / ${requiredScore}`,
+      `目前分數：${currentScore} / ${requiredScore}`
+    );
+  } else {
+    status.textContent = gameCopy(
+      `Teams must reach ${requiredScore} points to unlock the bonus game.`,
+      `隊伍需要取得 ${requiredScore} 分才能解鎖獎賞遊戲。`
+    );
+  }
+}
+
+function renderLockedResult(score) {
+  rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-slate-700 bg-slate-900 p-4 text-left";
+  rewardTitle.textContent = gameCopy("Bonus Game Locked", "獎賞遊戲尚未解鎖");
+  rewardTitle.className = "text-sm font-extrabold text-slate-200";
+  rewardText.textContent = gameCopy(
+    `Your team needs ${requiredScore} points to unlock this game. Current score: ${score} / ${requiredScore}`,
+    `你的隊伍需要取得 ${requiredScore} 分才能解鎖此遊戲。目前分數：${score} / ${requiredScore}`
+  );
+  renderScoreRequirement(score);
+}
+
+const liveScoreDisplay = document.getElementById("scoreDisplay");
+if (liveScoreDisplay) {
+  new MutationObserver(() => {
+    const score = Number(liveScoreDisplay.textContent);
+    if (Number.isFinite(score)) renderScoreRequirement(score);
+  }).observe(liveScoreDisplay, { childList: true, characterData: true, subtree: true });
+}
+
 function renderEventGamePayload() {
     if (!eventGamePayload) return;
     const payload = eventGamePayload;
     document.getElementById("protectedGameTitle").textContent = eventText(payload.gameTitle);
     document.getElementById("protectedGameEyebrow").textContent = eventText(payload.gameEyebrow);
     document.getElementById("protectedGameCopy").textContent = eventText(payload.gameCopy);
-    document.getElementById("teamSelectStatus").textContent = eventText(payload.requirement);
+    renderScoreRequirement(lastScoreContext?.score ?? null);
     document.getElementById("protectedGameInstructionsTitle").textContent = eventText(payload.instructionsTitle);
     document.getElementById("protectedGameInstructions").innerHTML = (payload.instructions || []).map((item, index) =>
       `<li class="flex items-start gap-2"><span class="bg-amber-500/20 text-amber-400 w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px]">${index + 1}</span><span></span></li>`
@@ -991,7 +1041,10 @@ const openLeaderboardButton = document.getElementById("leaderboardBtn") || docum
 const openLeaderboardFromGameOver = document.getElementById("openLeaderboardFromGameOver");
 const closeLeaderboardButton = document.getElementById("closeLeaderboardBtn");
 
-window.addEventListener("bridge-language-change", renderEventGamePayload);
+window.addEventListener("bridge-language-change", () => {
+  renderEventGamePayload();
+  reconcileLastScore();
+});
 
 function openLeaderboard() {
   renderLeaderboard();
@@ -1072,6 +1125,19 @@ onValue(ref(firebaseDb, `${BRIDGE_PATH}/settings/teamCount`), snapshot => {
   renderTeams(snapshot.val() || DEFAULT_TEAM_COUNT);
 });
 
+onValue(
+  ref(firebaseDb, `${BRIDGE_PATH}/settings/bonusGameUnlockScore`),
+  snapshot => {
+    requiredScore = normalizeRequiredScore(snapshot.val());
+    renderScoreRequirement(lastScoreContext?.score ?? null);
+    reconcileLastScore();
+  },
+  () => {
+    requiredScore = 30;
+    renderScoreRequirement(lastScoreContext?.score ?? null);
+  }
+);
+
 onValue(ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/leaderboard`), snapshot => {
   currentLeaderboard = snapshot.val() || {};
   renderLeaderboard();
@@ -1079,7 +1145,65 @@ onValue(ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/leaderboard`), snapshot => {
 
 onValue(ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/teamRewards`), snapshot => {
   currentRewards = snapshot.val() || {};
+  reconcileLastScore();
 });
+
+async function evaluateTeamReward(context) {
+  if (!context || !eventGamePayload || rewardEvaluationRunning) return;
+  rewardEvaluationRunning = true;
+  const { playerName, teamKey, teamName, score } = context;
+
+  try {
+    if (currentRewards[teamKey]) {
+      rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-left";
+      rewardTitle.textContent = eventText(eventGamePayload.rewardRepeatTitle);
+      rewardTitle.className = "text-sm font-extrabold text-amber-300";
+      rewardText.textContent = eventTemplate(eventGamePayload.rewardRepeatCopy, { team: teamName });
+      renderScoreRequirement(score);
+      return;
+    }
+
+    if (score < requiredScore) {
+      renderLockedResult(score);
+      return;
+    }
+
+    let firstTeamUnlock = false;
+    const rewardRef = ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/teamRewards/${teamKey}`);
+    const result = await runTransaction(rewardRef, current => {
+      if (current) return;
+      firstTeamUnlock = true;
+      return {
+        teamName,
+        firstPlayerName: playerName,
+        qualifyingScore: score,
+        requiredScore,
+        qualifiedAt: Date.now()
+      };
+    });
+
+    if (result.committed && firstTeamUnlock) {
+      rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-emerald-500/40 bg-emerald-950/50 p-4 text-left";
+      rewardTitle.textContent = eventText(eventGamePayload.rewardNewTitle);
+      rewardTitle.className = "text-sm font-extrabold text-emerald-300";
+      rewardText.textContent = eventTemplate(eventGamePayload.rewardNewCopy, { team: teamName });
+    } else {
+      rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-left";
+      rewardTitle.textContent = eventText(eventGamePayload.rewardRepeatTitle);
+      rewardTitle.className = "text-sm font-extrabold text-amber-300";
+      rewardText.textContent = eventTemplate(eventGamePayload.rewardRepeatCopy, { team: teamName });
+    }
+    renderScoreRequirement(score);
+  } catch {
+    renderLockedResult(score);
+  } finally {
+    rewardEvaluationRunning = false;
+  }
+}
+
+function reconcileLastScore() {
+  if (lastScoreContext) evaluateTeamReward(lastScoreContext);
+}
 
 submitScoreBtn.addEventListener("click", async event => {
   event.preventDefault();
@@ -1116,37 +1240,8 @@ submitScoreBtn.addEventListener("click", async event => {
       submittedAt: serverTimestamp()
     });
 
-    let firstTeamUnlock = false;
-    if (eventGamePayload && score >= Number(eventGamePayload.minimumScore)) {
-      const rewardRef = ref(firebaseDb, `${BRIDGE_PATH}/bonusGame/teamRewards/${teamKey}`);
-      const result = await runTransaction(rewardRef, current => {
-        if (current) return;
-        firstTeamUnlock = true;
-        return {
-          teamName,
-          firstPlayerName: playerName,
-          qualifyingScore: score,
-          qualifiedAt: Date.now()
-        };
-      });
-
-      if (result.committed && firstTeamUnlock) {
-        rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-emerald-500/40 bg-emerald-950/50 p-4 text-left";
-        rewardTitle.textContent = eventText(eventGamePayload.rewardNewTitle);
-        rewardTitle.className = "text-sm font-extrabold text-emerald-300";
-        rewardText.textContent = eventTemplate(eventGamePayload.rewardNewCopy, { team: teamName });
-      } else {
-        rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-left";
-        rewardTitle.textContent = eventText(eventGamePayload.rewardRepeatTitle);
-        rewardTitle.className = "text-sm font-extrabold text-amber-300";
-        rewardText.textContent = eventTemplate(eventGamePayload.rewardRepeatCopy, { team: teamName });
-      }
-    } else {
-      rewardMessage.className = "max-w-xs mx-auto rounded-xl border border-slate-700 bg-slate-900 p-4 text-left";
-      rewardTitle.textContent = eventText(eventGamePayload?.rewardTryTitle);
-      rewardTitle.className = "text-sm font-extrabold text-slate-200";
-      rewardText.textContent = eventText(eventGamePayload?.rewardTryCopy);
-    }
+    lastScoreContext = { playerName, teamKey, teamName, score };
+    await evaluateTeamReward(lastScoreContext);
 
     submitStatus.textContent = "Score saved to the live leaderboard.";
     submitStatus.className = "text-[10px] text-emerald-400";

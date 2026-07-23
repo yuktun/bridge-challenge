@@ -13,6 +13,9 @@ import { firebaseConfig, BRIDGE_PATH, DEFAULT_TEAM_COUNT, makeTeamNames } from "
 
 let TEAM_NAMES = makeTeamNames(DEFAULT_TEAM_COUNT);
 const MC_PASSWORD = "gicgic";
+const DEFAULT_BONUS_UNLOCK_SCORE = 30;
+const MIN_BONUS_UNLOCK_SCORE = 1;
+const MAX_BONUS_UNLOCK_SCORE = 999;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -640,6 +643,70 @@ el("teamCountSelect")?.addEventListener("change", async event => {
   } catch (error) {
     showMessage("settingsMessage", friendlyError(error), "err", true);
   }
+});
+
+function normalizeBonusUnlockScore(value) {
+  const normalized = typeof value === "string" && value.trim() !== ""
+    ? Number(value)
+    : value;
+  return Number.isInteger(normalized) &&
+    normalized >= MIN_BONUS_UNLOCK_SCORE &&
+    normalized <= MAX_BONUS_UNLOCK_SCORE
+    ? normalized
+    : DEFAULT_BONUS_UNLOCK_SCORE;
+}
+
+function renderBonusUnlockScore(value) {
+  const score = normalizeBonusUnlockScore(value);
+  if (el("bonusUnlockScoreInput")) el("bonusUnlockScoreInput").value = String(score);
+  if (el("bonusUnlockScoreStatus")) el("bonusUnlockScoreStatus").textContent = `${score} points／${score} 分`;
+  if (el("bonusUnlockScoreDescription")) {
+    el("bonusUnlockScoreDescription").innerHTML =
+      `Teams must reach ${score} points to unlock the bonus game.<br>` +
+      `<span lang="zh-Hant">隊伍需要取得 ${score} 分才能解鎖獎賞遊戲。</span>`;
+  }
+}
+
+el("updateBonusUnlockScore")?.addEventListener("click", async () => {
+  const input = el("bonusUnlockScoreInput");
+  const raw = input?.value?.trim() || "";
+  const score = Number(raw);
+
+  if (
+    raw === "" ||
+    !Number.isInteger(score) ||
+    score < MIN_BONUS_UNLOCK_SCORE ||
+    score > MAX_BONUS_UNLOCK_SCORE
+  ) {
+    showMessage(
+      "bonusUnlockScoreMessage",
+      `Enter a whole number from ${MIN_BONUS_UNLOCK_SCORE} to ${MAX_BONUS_UNLOCK_SCORE}. ` +
+        `請輸入 ${MIN_BONUS_UNLOCK_SCORE} 至 ${MAX_BONUS_UNLOCK_SCORE} 的整數。`,
+      "err",
+      true
+    );
+    return;
+  }
+
+  const button = el("updateBonusUnlockScore");
+  try {
+    button.disabled = true;
+    await set(bridgeRef("settings/bonusGameUnlockScore"), score);
+    renderBonusUnlockScore(score);
+    showMessage(
+      "bonusUnlockScoreMessage",
+      `Unlock score updated to ${score}. 解鎖分數已更新為 ${score}。`,
+      "ok"
+    );
+  } catch (error) {
+    showMessage("bonusUnlockScoreMessage", friendlyError(error), "err", true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+onValue(bridgeRef("settings/bonusGameUnlockScore"), snapshot => {
+  renderBonusUnlockScore(snapshot.val());
 });
 
 
